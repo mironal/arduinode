@@ -125,7 +125,11 @@ String aoWriteTask(String portWithValue){
     return aoWriteRetuenString("NG", port, -1);
   }
   String valQuery = portWithValue.substring(at + 1);
-  valQuery.replace("val=","");
+  if(valQuery.startsWith("val=")){
+    valQuery.replace("val=","");
+  }else{
+    return aoWriteRetuenString("NG", port, -1);
+  }
 
   int val = strToInt(valQuery);
   analogWrite(port, val);
