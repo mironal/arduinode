@@ -127,8 +127,19 @@ var tests = [
   cmd:"ai/read/a",
   expect:JSON.stringify({msg:"NG", port:-1, val:-1}),
   send:false
+},
+{
+  name:"DI read test.",
+  cmd:"di/read/0",
+  expect:JSON.stringify({msg:"OK", port:0, val:1}).split("\"val")[0],
+  send:false
+},
+{
+  name:"DI read test.",
+  cmd:"di/read/aa",
+  expect:JSON.stringify({msg:"NG", port:-1, val:-1}),
+  send:false
 }
-
 ];
 var test_index = 0;
 sp.on('data', function (data) {
