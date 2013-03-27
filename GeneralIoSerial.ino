@@ -42,7 +42,6 @@ void loop() {
       if(read_buf[buf_index] == (char)10){
         String msg = String(read_buf);
         msg.trim();
-        //Serial.println(msg);
         Serial.println(task(msg));
         buf_index = 0;
         memset(read_buf,0,128);
