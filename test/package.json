@@ -1,0 +1,9 @@
+{
+  "name": "node-serial-test" ,
+  "version": "0.0.1" ,
+  "private": true ,
+  "dependencies": {
+    "serialport": "1.1.0",
+    "underscore": "1.4.4"
+  }
+}
