@@ -70,3 +70,9 @@ serial.sendCommand("di/read/2", function(err, reuslt){
 });
 ```
 
+# TODO
+
+* 使用方法の整備
+* node.js側の整備 & モジュール化 (現在はテストコードしか無い)
+* Arduino側の機能追加
+
