@@ -55,6 +55,8 @@ function nextPhaseMsg(result){
   console.log("Received message : " + result);
   console.log("Phase " + phase + " is OK. Next phase.");
   console.log();
+  readData = '';
+  phase++;
 }
 
 sp.on('data', function (data) {
@@ -70,8 +72,6 @@ sp.on('data', function (data) {
         console.log("AO write test.");
         var aoWriteTest = "ao/write/3?val=25\n";
         sendCommand(aoWriteTest);
-        readData = '';
-        phase = 1;
       }
       break;
     case 1:
@@ -82,8 +82,6 @@ sp.on('data', function (data) {
         nextPhaseMsg(readData);
         var cmd = "ao/write/11\n";
         sendCommand(cmd);
-        readData = '';
-        phase = 2;
       }
       break;
     case 2:
@@ -93,8 +91,6 @@ sp.on('data', function (data) {
         nextPhaseMsg(readData);
         var cmd = "ao/write/12?geho\n";
         sendCommand(cmd);
-        readData = '';
-        phase = 3;
       }
       break;
     case 3:
@@ -102,8 +98,15 @@ sp.on('data', function (data) {
       var json = JSON.stringify(expect);
       if(readData.indexOf(json) >= 0){
         nextPhaseMsg(readData);
-        readData = '';
-        phase = 4;
+        var cmd = "ao/write/12?val=aaa\n";
+        sendCommand(cmd);
+      }
+      break;
+    case 4:
+      var expect = {msg:"NG", port:12, val:-3};
+      var json = JSON.stringify(expect);
+      if(readData.indexOf(json) >= 0){
+        nextPhaseMsg(readData);
       }
       break;
   }
