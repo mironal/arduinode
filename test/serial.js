@@ -143,10 +143,29 @@ sp.on('data', function (data) {
       var json = JSON.stringify(expect);
       if(readData.indexOf(json) >= 0){
         nextPhaseMsg(readData);
-        var cmd = "ai/ref?type=hoge\n";
+        var cmd = "ai/read/1\n";
         sendCommand(cmd);
       }
       break;
+    case 9:
+      var expect = {msg:"OK", port:1, val:1};
+      // aiの値は不定なのでそこは無視する.
+      var json = JSON.stringify(expect).split("\"val")[0];
+      if(readData.indexOf(json) >= 0){
+        nextPhaseMsg(readData);
+        var cmd = "ai/read/aa\n";
+        sendCommand(cmd);
+      }
+      break;
+    case 10:
+      var expect = {msg:"NG", port:-1, val:-1};
+      // aiの値は不定なのでそこは無視する.
+      var json = JSON.stringify(expect);
+      if(readData.indexOf(json) >= 0){
+        nextPhaseMsg(readData);
+      }
+      break;
+
   }
 
 });

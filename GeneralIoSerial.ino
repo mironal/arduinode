@@ -182,10 +182,19 @@ String aiTask(String ai){
   return String("NG : ") + ai;
 }
 
-String aiReadTask(String port){
-  return "";
-}
+String aiReadTask(String portQuery){
+  if(!isInt(portQuery)){
+    return aiReadReturnString("NG", -1, -1);
+  }
+  int port = strToInt(portQuery);
+  int val = analogRead(port);
+  return aiReadReturnString("OK", port, val);
 
+}
+String aiReadReturnString(String msg, int port, int val){
+  String body = wrapDq("msg") + ":" + wrapDq(msg) + "," + wrapDq("port") + ":" + String(port) + "," + wrapDq("val") + ":" + String(val);
+  return wraped('{', body, '}');
+}
 
 /*
    AIリファレンス電圧切替.
