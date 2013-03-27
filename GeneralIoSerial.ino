@@ -48,6 +48,17 @@ void loop() {
   }
 }
 
+
+boolean isInt(String str){
+  for(int i = 0; i < str.length(); i++){
+    char c = str[i];
+    if( !((c >= '0') && (c <= '9')) ){
+      return false;
+    }
+  }
+  return true;
+}
+
 // strの先頭から数値を解析してintにして返す
 // 234hogeを渡すと234が返ってくる
 // 128文字以上の数が含まれるとシヌ。そもそもintが2byteなので速攻で死ぬ
@@ -128,7 +139,10 @@ String aoWriteTask(String portWithValue){
   if(valQuery.startsWith("val=")){
     valQuery.replace("val=","");
   }else{
-    return aoWriteRetuenString("NG", port, -1);
+    return aoWriteRetuenString("NG", port, -2);
+  }
+  if(!isInt(valQuery)){
+    return aoWriteRetuenString("NG", port, -3);
   }
 
   int val = strToInt(valQuery);

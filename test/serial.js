@@ -98,7 +98,7 @@ sp.on('data', function (data) {
       }
       break;
     case 3:
-      var expect = {msg:"NG", port:12, val:-1};
+      var expect = {msg:"NG", port:12, val:-2};
       var json = JSON.stringify(expect);
       if(readData.indexOf(json) >= 0){
         nextPhaseMsg(readData);
