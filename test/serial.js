@@ -107,6 +107,44 @@ sp.on('data', function (data) {
       var json = JSON.stringify(expect);
       if(readData.indexOf(json) >= 0){
         nextPhaseMsg(readData);
+        var cmd = "ai/ref?type=INTERNAL\n";
+        sendCommand(cmd);
+      }
+      break;
+    case 5:
+      var expect = {msg:"OK", type:"INTERNAL"};
+      var json = JSON.stringify(expect);
+      if(readData.indexOf(json) >= 0){
+        nextPhaseMsg(readData);
+        var cmd = "ai/ref?type=EXTERNAL\n";
+        sendCommand(cmd);
+      }
+      break;
+    case 6:
+      var expect = {msg:"OK", type:"EXTERNAL"};
+      var json = JSON.stringify(expect);
+      if(readData.indexOf(json) >= 0){
+        nextPhaseMsg(readData);
+        var cmd = "ai/ref?type=DEFAULT\n";
+        sendCommand(cmd);
+      }
+      break;
+    case 7:
+      var expect = {msg:"OK", type:"DEFAULT"};
+      var json = JSON.stringify(expect);
+      if(readData.indexOf(json) >= 0){
+        nextPhaseMsg(readData);
+        var cmd = "ai/ref?type=hoge\n";
+        sendCommand(cmd);
+      }
+      break;
+    case 8:
+      var expect = {msg:"NG", type:"hoge"};
+      var json = JSON.stringify(expect);
+      if(readData.indexOf(json) >= 0){
+        nextPhaseMsg(readData);
+        var cmd = "ai/ref?type=hoge\n";
+        sendCommand(cmd);
       }
       break;
   }

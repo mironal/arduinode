@@ -29,6 +29,11 @@ const char* AI_REF_TBL[AI_REF_TBL_SIZE] = {
   "INTERNAL",
   "EXTERNAL"
 };
+const uint8_t AI_REF_VAL_TBL[] = {
+  DEFAULT,
+  INTERNAL,
+  EXTERNAL
+};
 
 void loop() {
   if(Serial.available() > 0){
@@ -188,6 +193,7 @@ String aiReadTask(String port){
 String aiSwitchRef(String ref){
   for(int i = 0; i < AI_REF_TBL_SIZE; i++){
     if(ref.endsWith(AI_REF_TBL[i])){
+      analogReference(AI_REF_VAL_TBL[i]);
       return aiSwitchRefReturn("OK", AI_REF_TBL[i]);
     }
   }
