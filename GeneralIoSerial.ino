@@ -34,6 +34,7 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
   {String("ai/ref"), &aiRefSwitchTask},
   {String("ao/write/"), &aoWriteTask},
   {String("di/read/"), &diReadTask},
+  {String("do/write/"), &doWriteTask},
   {String("system/close"), &closeSerial}
 };
 
@@ -98,24 +99,50 @@ String aoWriteTask(String portWithValue){
   int at = portWithValue.indexOf('?');
   if(at == -1){
     // queryが指定されていなかったら-1で返す.
-    return aoWriteRetuenString("NG", port, -1);
+    return ioWriteReturnString("NG", port, -1);
   }
   String valQuery = portWithValue.substring(at + 1);
   if(valQuery.startsWith("val=")){
     valQuery.replace("val=","");
   }else{
-    return aoWriteRetuenString("NG", port, -2);
+    return ioWriteReturnString("NG", port, -2);
   }
   if(!isInt(valQuery)){
-    return aoWriteRetuenString("NG", port, -3);
+    return ioWriteReturnString("NG", port, -3);
   }
 
   int val = strToInt(valQuery);
   analogWrite(port, val);
-  return aoWriteRetuenString("OK", port, val);
+  return ioWriteReturnString("OK", port, val);
 }
 
-String aoWriteRetuenString(String msg, int port, int val){
+String doWriteTask(String portWithValue){
+  int port = strToInt(portWithValue);
+  int at = portWithValue.indexOf('?');
+  if(at == -1){
+    // queryが指定されていなかったら-1で返す.
+    return ioWriteReturnString("NG", port, -1);
+  }
+  String valQuery = portWithValue.substring(at + 1);
+  if(valQuery.startsWith("val=")){
+    valQuery.replace("val=","");
+  }else{
+    return ioWriteReturnString("NG", port, -2);
+  }
+  if(!isInt(valQuery)){
+    return ioWriteReturnString("NG", port, -3);
+  }
+
+  int val = strToInt(valQuery);
+  if(val == 1){
+    digitalWrite(port, HIGH);
+  }else{
+    digitalWrite(port, LOW);
+  }
+  return ioWriteReturnString("OK", port, val);
+}
+
+String ioWriteReturnString(String msg, int port, int val){
   String body = wrapDq("msg") + ":"+wrapDq(msg) + "," + wrapDq("port") + ":" + String(port) + "," + wrapDq("val") + ":" + String(val);
 
   return wraped('{', body, '}');
