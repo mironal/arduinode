@@ -1,18 +1,14 @@
+#define ARRAYSIZE(array) (sizeof(array) / sizeof(array[0]))
+
 char read_buf[128];
 int buf_index = 0;
-
-void setup() {
-  memset(read_buf,0,128);
-  Serial.begin(9600);
-  Serial.println("READY");
-}
-
 
 const char* AI_REF_TBL[] = {
   "DEFAULT",
   "INTERNAL",
   "EXTERNAL"
 };
+
 const uint8_t AI_REF_VAL_TBL[] = {
   DEFAULT,
   INTERNAL,
@@ -38,6 +34,12 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
   {String("system/close"), &closeSerial}
 };
 
+void setup() {
+  memset(read_buf,0,128);
+  Serial.begin(9600);
+  Serial.println("READY");
+}
+
 void loop() {
   if(Serial.available() > 0){
     while(Serial.available() > 0){
@@ -56,40 +58,23 @@ void loop() {
 }
 
 
-/*
-SYSTEM
-
-シリアルポート切断
-system/close
-
-DI
-di/read/{port}
-
-do/write/{port}?val={val}
-
-AI
-ai/ref?type={TYPE}
-ai/read/{port}
-
-AO
-ao/write/{port}?val={value}
-*/
 String task(String msg){
-  for(int i = 0; i < sizeof(TASK_FUNC_TBL); i++){
+  // 関数テーブルからタスクを決定する.
+  // prefixは空文字と置換される.
+  for(int i = 0; i < ARRAYSIZE(TASK_FUNC_TBL); i++){
     if(msg.startsWith(TASK_FUNC_TBL[i].prefix)){
       msg.replace(TASK_FUNC_TBL[i].prefix, "");
       return TASK_FUNC_TBL[i].func(msg);
     }
   }
-  return String("NG : ") + msg;
+  // TODO JSONでエスケープするべき文字が入っていると受信した側でヤバイ気がする.
+  return '{' + wrapDq("msg") + ":" + wrapDq("NG")
+    + "," + wrapDq("cmd") + ":" + wrapDq(msg) + '}';
 }
 
 
-// シリアルを閉じる.
-String closeSerial(String empty){
-  Serial.end();
-  return "";
-}
+/* この辺のコードがめっちゃ2重化してるのはとりあえず気にしない. */
+
 /*
    {port_num}?val={value}
    で入ってくる.
@@ -99,21 +84,21 @@ String aoWriteTask(String portWithValue){
   int at = portWithValue.indexOf('?');
   if(at == -1){
     // queryが指定されていなかったら-1で返す.
-    return ioWriteReturnString("NG", port, -1);
+    return ioWriteReturnJson("NG", port, -1);
   }
   String valQuery = portWithValue.substring(at + 1);
   if(valQuery.startsWith("val=")){
     valQuery.replace("val=","");
   }else{
-    return ioWriteReturnString("NG", port, -2);
+    return ioWriteReturnJson("NG", port, -2);
   }
   if(!isInt(valQuery)){
-    return ioWriteReturnString("NG", port, -3);
+    return ioWriteReturnJson("NG", port, -3);
   }
 
   int val = strToInt(valQuery);
   analogWrite(port, val);
-  return ioWriteReturnString("OK", port, val);
+  return ioWriteReturnJson("OK", port, val);
 }
 
 String doWriteTask(String portWithValue){
@@ -121,16 +106,16 @@ String doWriteTask(String portWithValue){
   int at = portWithValue.indexOf('?');
   if(at == -1){
     // queryが指定されていなかったら-1で返す.
-    return ioWriteReturnString("NG", port, -1);
+    return ioWriteReturnJson("NG", port, -1);
   }
   String valQuery = portWithValue.substring(at + 1);
   if(valQuery.startsWith("val=")){
     valQuery.replace("val=","");
   }else{
-    return ioWriteReturnString("NG", port, -2);
+    return ioWriteReturnJson("NG", port, -2);
   }
   if(!isInt(valQuery)){
-    return ioWriteReturnString("NG", port, -3);
+    return ioWriteReturnJson("NG", port, -3);
   }
 
   int val = strToInt(valQuery);
@@ -139,35 +124,39 @@ String doWriteTask(String portWithValue){
   }else{
     digitalWrite(port, LOW);
   }
-  return ioWriteReturnString("OK", port, val);
+  return ioWriteReturnJson("OK", port, val);
 }
 
-String ioWriteReturnString(String msg, int port, int val){
-  String body = wrapDq("msg") + ":"+wrapDq(msg) + "," + wrapDq("port") + ":" + String(port) + "," + wrapDq("val") + ":" + String(val);
-
+String ioWriteReturnJson(String msg, int port, int val){
+  String body = wrapDq("msg") + ":"+wrapDq(msg)
+    + "," + wrapDq("port") + ":" + String(port)
+    + "," + wrapDq("val") + ":" + String(val);
   return wraped('{', body, '}');
 }
 
 String diReadTask(String portQuery){
   if(!isInt(portQuery)){
-    return ioReadReturnString("NG", -1, -1);
+    return ioReadReturnJson("NG", -1, -1);
   }
   int port = strToInt(portQuery);
   int val = digitalRead(port);
-  return ioReadReturnString("OK", port, val);
+  return ioReadReturnJson("OK", port, val);
 }
 
 String aiReadTask(String portQuery){
   if(!isInt(portQuery)){
-    return ioReadReturnString("NG", -1, -1);
+    return ioReadReturnJson("NG", -1, -1);
   }
   int port = strToInt(portQuery);
   int val = analogRead(port);
-  return ioReadReturnString("OK", port, val);
+  return ioReadReturnJson("OK", port, val);
 
 }
-String ioReadReturnString(String msg, int port, int val){
-  String body = wrapDq("msg") + ":" + wrapDq(msg) + "," + wrapDq("port") + ":" + String(port) + "," + wrapDq("val") + ":" + String(val);
+
+String ioReadReturnJson(String msg, int port, int val){
+  String body = wrapDq("msg") + ":" + wrapDq(msg)
+    + "," + wrapDq("port") + ":" + String(port)
+    + "," + wrapDq("val") + ":" + String(val);
   return wraped('{', body, '}');
 }
 
@@ -175,21 +164,28 @@ String ioReadReturnString(String msg, int port, int val){
    AIリファレンス電圧切替.
  */
 String aiRefSwitchTask(String ref){
-  for(int i = 0; i < sizeof(AI_REF_TBL); i++){
+  for(int i = 0; i < ARRAYSIZE(AI_REF_TBL); i++){
     if(ref.endsWith(AI_REF_TBL[i])){
       analogReference(AI_REF_VAL_TBL[i]);
-      return aiSwitchRefReturn("OK", AI_REF_TBL[i]);
+      return aiSwitchRefReturnJson("OK", AI_REF_TBL[i]);
     }
   }
   ref.replace("?type=", "");
-  return aiSwitchRefReturn("NG", ref);
+  return aiSwitchRefReturnJson("NG", ref);
 }
 
-String aiSwitchRefReturn(String msg, String refType){
-    String body = wrapDq("msg") + ":" + wrapDq(msg) + "," + wrapDq("type") + ":" + wrapDq(refType);
-    return wraped('{', body, '}');
+String aiSwitchRefReturnJson(String msg, String refType){
+  String body = wrapDq("msg") + ":" + wrapDq(msg)
+    + "," + wrapDq("type") + ":" + wrapDq(refType);
+  return wraped('{', body, '}');
 }
 
+
+// シリアルを閉じる.
+String closeSerial(String empty){
+  Serial.end();
+  return "";
+}
 
 /*
    Utility functions.

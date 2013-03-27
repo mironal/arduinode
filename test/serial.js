@@ -163,7 +163,14 @@ var tests = [
   cmd:"do/write/3?val=hoge",
   expect:JSON.stringify({msg:"NG", port:3, val:-3}),
   send:false
+},
+{
+  name:"Illegal Command.",
+  cmd:"aaaaa",
+  expect:JSON.stringify({msg:"NG", cmd:"aaaaa"}),
+  send:false
 }
+
 ];
 var test_index = 0;
 sp.on('data', function (data) {
