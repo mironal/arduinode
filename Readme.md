@@ -135,3 +135,5 @@ serial.sendCommand("di/read/2", function(err, reuslt){
 
 My english is poor.
 
+正しいイングリッシュへの修正案はいつでもうぇるかむです。
+
