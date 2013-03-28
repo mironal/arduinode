@@ -26,11 +26,55 @@ struct TASK_FUNC {
 
 // prefixとタスク関数のテーブルを使ってキメる.
 const struct TASK_FUNC TASK_FUNC_TBL[] = {
+  /*
+     Read AI port.
+     format  => ai/read/{port}
+     {port}  => port number.
+     example => ai/read/0
+   */
   {String("ai/read/"), &aiReadTask},
+
+  /*
+    Switch AI reference volt.
+    format  => ai/ref?type={TYPE}
+    {TYPE}  => DEFAULT | INTERNAL | EXTERNAL
+    example => ai/ref?type=INTERNAL
+   */
   {String("ai/ref"), &aiRefSwitchTask},
+
+  /*
+     Write AO port.
+     format  => ao/write/{port}?val={val}
+     {port}  => port number.
+     {val}   => write value.
+     example => ao/write/1?val=100
+   */
   {String("ao/write/"), &aoWriteTask},
+
+  /*
+     Read DI port.
+     format  => di/read/{port}
+     {port}  => port number.
+     example => di/read/2
+   */
   {String("di/read/"), &diReadTask},
+
+
+  /*
+     Write DO port.
+     format  => do/write/{port}?val={val}
+     {port}  => port number.
+     {val}   => write value.
+     example => do/write/3?val=1
+   */
   {String("do/write/"), &doWriteTask},
+
+
+
+  /*
+     Close serial port.
+     format => system/close
+   */
   {String("system/close"), &closeSerial}
 };
 
