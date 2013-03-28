@@ -64,8 +64,9 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      Write DO port.
      format  => do/write/{port}?val={val}
      {port}  => port number.
-     {val}   => write value.
+     {val}   => write value. or HIGH | LOW
      example => do/write/3?val=1
+     example => do/write/3?val=HIGH
    */
   {String("do/write/"), &doWriteTask},
 
@@ -135,11 +136,17 @@ String checkPortWithValue(String portWithValue, int *port, int *val){
   }else{
     return NgReturnJson("val is not specified.", valQuery);
   }
-  if(!isInt(valQuery)){
+
+  // HIGH, LOWのチェックはdoWriteTask用
+  if(valQuery == "HIGH"){
+    *val = 1;
+  }else if(valQuery == "LOW"){
+    *val = 0;
+  }else if(isInt(valQuery)){
+    *val = strToInt(valQuery);
+  }else{
     return NgReturnJson("Illegal value.", valQuery);
   }
-
-  *val = strToInt(valQuery);
 
   return NULL;
 }
@@ -175,6 +182,7 @@ String doWriteTask(String portWithValue){
     digitalWrite(port, HIGH);
   }else{
     digitalWrite(port, LOW);
+    val = 0;
   }
   return ioWriteReturnJson("OK", port, val);
 }

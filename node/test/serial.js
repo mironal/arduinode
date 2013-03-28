@@ -148,7 +148,19 @@ var tests = [
 {
   name:"DO write test.",
   cmd:"do/write/3?val=25",
-  expect:JSON.stringify({msg:"OK", port:3, val:25}),
+  expect:JSON.stringify({msg:"OK", port:3, val:0}),
+  send:false
+},
+{
+  name:"DO write test. HIGH",
+  cmd:"do/write/4?val=HIGH",
+  expect:JSON.stringify({msg:"OK", port:4, val:1}),
+  send:false
+},
+{
+  name:"DO write test. LOW",
+  cmd:"do/write/40?val=LOW",
+  expect:JSON.stringify({msg:"OK", port:40, val:0}),
   send:false
 },
 {
