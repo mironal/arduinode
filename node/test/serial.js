@@ -1,7 +1,6 @@
 var serialport = require("serialport");
 var SerialPort = serialport.SerialPort;
 var assert = require('assert');
-var _ = require("underscore");
 var portName = "/dev/tty.usbmodem1411";
 
 var readData = '';
@@ -77,19 +76,25 @@ var tests = [
 {
   name:"AO write test. No query.",
   cmd:"ao/write/3",
-  expect:JSON.stringify({msg:"NG", port:3, val:-1}),
+  expect:JSON.stringify({msg:"NG", error:"Query not found.", hint:"3"}),
   send:false
 },
 {
   name:"AO write test. Illegal query.",
   cmd:"ao/write/3?hoge",
-  expect:JSON.stringify({msg:"NG", port:3, val:-2}),
+  expect:JSON.stringify({msg:"NG", error:"val is not specified.", hint:"hoge"}),
   send:false
 },
 {
   name:"AO write test. Illegal value. ",
   cmd:"ao/write/3?val=hoge",
-  expect:JSON.stringify({msg:"NG", port:3, val:-3}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal value.", hint:"hoge"}),
+  send:false
+},
+{
+  name:"AO write test. Illegal port number. ",
+  cmd:"ao/write/a?val=20",
+  expect:JSON.stringify({msg:"NG", error:"Illegal port number.", hint:"a"}),
   send:false
 },
 {

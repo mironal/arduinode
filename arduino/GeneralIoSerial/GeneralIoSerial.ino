@@ -124,25 +124,35 @@ String task(String msg){
    で入ってくる.
  */
 String aoWriteTask(String portWithValue){
-  int port = strToInt(portWithValue);
   int at = portWithValue.indexOf('?');
   if(at == -1){
     // queryが指定されていなかったら-1で返す.
-    return ioWriteReturnJson("NG", port, -1);
+    return NgReturnJson("Query not found.", portWithValue);
   }
+  String portQuery = portWithValue.substring(0, at);
+  if(!isInt(portQuery)){
+    return NgReturnJson("Illegal port number.", portQuery);
+  }
+  int port = strToInt(portQuery);
+
   String valQuery = portWithValue.substring(at + 1);
   if(valQuery.startsWith("val=")){
     valQuery.replace("val=","");
   }else{
-    return ioWriteReturnJson("NG", port, -2);
+    return NgReturnJson("val is not specified.", valQuery);
   }
   if(!isInt(valQuery)){
-    return ioWriteReturnJson("NG", port, -3);
+    return NgReturnJson("Illegal value.", valQuery);
   }
 
   int val = strToInt(valQuery);
   analogWrite(port, val);
   return ioWriteReturnJson("OK", port, val);
+}
+
+String NgReturnJson(String err, String hint){
+  String body = wrapDq("msg") + ":" + wrapDq("NG") + "," + wrapDq("error") + ":" + wrapDq(err) + "," + wrapDq("hint") + ":" + wrapDq(hint);
+  return wraped('{', body, '}');
 }
 
 String doWriteTask(String portWithValue){
