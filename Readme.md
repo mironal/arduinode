@@ -33,7 +33,7 @@ This takes effort than programming in node.js(javascript) very and leads to brea
 By two following methods,  I dispense with re-programming of the Arduino side and enable development only in easy node.js of the debugging.
 
 1. Arduino is devoted to interface to various sensors
-2.control the Arduino with node.js, eliminating the need for program changes Arduino.
+2. control the Arduino with node.js, eliminating the need for program changes Arduino.
 
 ## 前提条件、Prerequisite
 
