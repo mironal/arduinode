@@ -117,13 +117,7 @@ String task(String msg){
 }
 
 
-/* この辺のコードがめっちゃ2重化してるのはとりあえず気にしない. */
-
-/*
-   {port_num}?val={value}
-   で入ってくる.
- */
-String aoWriteTask(String portWithValue){
+String checkPortWithValue(String portWithValue, int *port, int *val){
   int at = portWithValue.indexOf('?');
   if(at == -1){
     // queryが指定されていなかったら-1で返す.
@@ -133,7 +127,7 @@ String aoWriteTask(String portWithValue){
   if(!isInt(portQuery)){
     return NgReturnJson("Illegal port number.", portQuery);
   }
-  int port = strToInt(portQuery);
+  *port = strToInt(portQuery);
 
   String valQuery = portWithValue.substring(at + 1);
   if(valQuery.startsWith("val=")){
@@ -145,34 +139,38 @@ String aoWriteTask(String portWithValue){
     return NgReturnJson("Illegal value.", valQuery);
   }
 
-  int val = strToInt(valQuery);
+  *val = strToInt(valQuery);
+
+  return NULL;
+}
+
+/*
+   {port_num}?val={value}
+   で入ってくる.
+ */
+String aoWriteTask(String portWithValue){
+  int port = 0;
+  int val = 0;
+
+  String error = checkPortWithValue(portWithValue, &port, &val);
+  if(error){
+    return error;
+  }
+
   analogWrite(port, val);
   return ioWriteReturnJson("OK", port, val);
 }
 
-String NgReturnJson(String err, String hint){
-  String body = wrapDq("msg") + ":" + wrapDq("NG") + "," + wrapDq("error") + ":" + wrapDq(err) + "," + wrapDq("hint") + ":" + wrapDq(hint);
-  return wraped('{', body, '}');
-}
 
 String doWriteTask(String portWithValue){
-  int port = strToInt(portWithValue);
-  int at = portWithValue.indexOf('?');
-  if(at == -1){
-    // queryが指定されていなかったら-1で返す.
-    return ioWriteReturnJson("NG", port, -1);
-  }
-  String valQuery = portWithValue.substring(at + 1);
-  if(valQuery.startsWith("val=")){
-    valQuery.replace("val=","");
-  }else{
-    return ioWriteReturnJson("NG", port, -2);
-  }
-  if(!isInt(valQuery)){
-    return ioWriteReturnJson("NG", port, -3);
+  int port = 0;
+  int val = 0;
+
+  String error = checkPortWithValue(portWithValue, &port, &val);
+  if(error){
+    return error;
   }
 
-  int val = strToInt(valQuery);
   if(val == 1){
     digitalWrite(port, HIGH);
   }else{
@@ -244,6 +242,11 @@ String closeSerial(String empty){
 /*
    Utility functions.
  */
+
+String NgReturnJson(String err, String hint){
+  String body = wrapDq("msg") + ":" + wrapDq("NG") + "," + wrapDq("error") + ":" + wrapDq(err) + "," + wrapDq("hint") + ":" + wrapDq(hint);
+  return wraped('{', body, '}');
+}
 
 String wrapDq(String str){
   return wrapChar(str, '"');

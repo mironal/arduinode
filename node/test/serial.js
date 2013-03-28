@@ -154,19 +154,25 @@ var tests = [
 {
   name:"DO write test. No query.",
   cmd:"do/write/3",
-  expect:JSON.stringify({msg:"NG", port:3, val:-1}),
+  expect:JSON.stringify({msg:"NG", error:"Query not found.", hint:"3"}),
+  send:false
+},
+{
+  name:"DO write test. Illegal port number.",
+  cmd:"do/write/b?val=3",
+  expect:JSON.stringify({msg:"NG", error:"Illegal port number.", hint:"b"}),
   send:false
 },
 {
   name:"DO write test. Illegal query.",
   cmd:"do/write/3?hoge",
-  expect:JSON.stringify({msg:"NG", port:3, val:-2}),
+  expect:JSON.stringify({msg:"NG", error:"val is not specified.", hint:"hoge"}),
   send:false
 },
 {
   name:"DO write test. Illegal value. ",
   cmd:"do/write/3?val=hoge",
-  expect:JSON.stringify({msg:"NG", port:3, val:-3}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal value.", hint:"hoge"}),
   send:false
 },
 {
