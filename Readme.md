@@ -71,7 +71,7 @@ node.jsから以下のようにアクセスし、Arduinoの制御を行うこと
 
 ```js
 // AI0の値の読み込み
-serial.sendCommand("ai/read/0", function(err, result){
+serial.send("ai/read/0", function(err, result){
     if(err) throw err;
     console.log("AI0 : " + result);
     // AI0 : {"msg":"OK", "port":0,  "val":200}
@@ -80,7 +80,7 @@ serial.sendCommand("ai/read/0", function(err, result){
 
 ```js
 // AO1に値の書き込み
-serial.sendCommand("ao/write/1?val=30", function(err, reuslt){
+serial.send("ao/write/1?val=30", function(err, reuslt){
     if(err) throw err;
     console.log("AO1 : " + result);
     // AO1 : {"msg":"OK", "port":2, "val":30}
@@ -89,7 +89,7 @@ serial.sendCommand("ao/write/1?val=30", function(err, reuslt){
 
 ```js
 // AIリファレンス電圧の変更
-serial.sendCommand("ai/ref?type=INTERNAL", function(err, reuslt){
+serial.send("ai/ref?type=INTERNAL", function(err, reuslt){
     if(err) throw err;
     console.log("AI REF : " + result);
     // AI REF : {"msg":"OK", "type":"INTERNAL"A}
@@ -98,7 +98,7 @@ serial.sendCommand("ai/ref?type=INTERNAL", function(err, reuslt){
 
 ```js
 // DI2の値の読み込み
-serial.sendCommand("di/read/2", function(err, reuslt){
+serial.send("di/read/2", function(err, reuslt){
     if(err) throw err;
     console.log("DI0 : " + result);
     // DI2 : {"msg":"OK", "port":0, "val":1}
