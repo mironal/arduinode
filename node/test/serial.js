@@ -6,7 +6,7 @@ var portName = "/dev/tty.usbmodem1411";
 var readData = '';
 var phase = 0;
 var sp = new SerialPort(portName, {
-  baudRate: 9600,
+  baudRate: 115200,
   dataBits: 8,
   parity: 'none',
   stopBits: 1,

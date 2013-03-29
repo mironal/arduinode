@@ -96,7 +96,7 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
 
 void setup() {
   memset(read_buf,0,128);
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("READY");
 }
 
