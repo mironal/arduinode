@@ -210,10 +210,13 @@ var tests = [
   cmd:"d/mode/3?type=INPUT_PULLUP",
   expect:JSON.stringify({msg:"OK", type:"INPUT_PULLUP"}),
   send:false
+},
+{
+  name:"Too long command.",
+  cmd:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  expect:JSON.stringify({msg:"NG", error:"Command is too long.", hint:"Less than 127 characters, including newlines"}),
+  send:false
 }
-
-
-
 ];
 var test_index = 0;
 sp.on('data', function (data) {
