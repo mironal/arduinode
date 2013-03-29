@@ -112,7 +112,13 @@ void loop() {
         buf_index = 0;
         break;
       }
-      buf_index++;
+      if(++buf_index >= ARRAYSIZE(read_buf)){
+        // なくなるまで読み捨てる.
+        Serial.println(NgReturnJson("Command is too long.", String(buf_index)));
+        while(Serial.available() > 0){Serial.read();}
+        memset(read_buf, 0, ARRAYSIZE(read_buf));
+        buf_index = 0;
+      }
     }
   }
 }
