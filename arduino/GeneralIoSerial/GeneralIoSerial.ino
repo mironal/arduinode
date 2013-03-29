@@ -70,7 +70,14 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
    */
   {String("do/write/"), &doWriteTask},
 
-
+  /*
+     Swith digital pin mode.
+     format  => d/mode/{port}?type={type}
+     {port}  => port number.
+     {type}   => INPUT | OUTPUT | INPUT_PULLUP
+     example => d/mode/3?type=INPUT
+   */
+  {String("d/mode/"), &switchPinModeTask},
 
   /*
      Close serial port.
@@ -93,8 +100,8 @@ void loop() {
         String msg = String(read_buf);
         msg.trim();
         Serial.println(task(msg));
+        memset(read_buf, 0, buf_index);
         buf_index = 0;
-        memset(read_buf,0,128);
         break;
       }
       buf_index++;
@@ -113,24 +120,65 @@ String task(String msg){
     }
   }
   // TODO JSONでエスケープするべき文字が入っていると受信した側でヤバイ気がする.
-  return '{' + wrapDq("msg") + ":" + wrapDq("NG")
-    + "," + wrapDq("cmd") + ":" + wrapDq(msg) + '}';
+  return NgReturnJson("Illegal command.", msg);
 }
 
+String switchPinModeTask(String portWithQuery){
 
-String checkPortWithValue(String portWithValue, int *port, int *val){
-  int at = portWithValue.indexOf('?');
+  String valQuery;
+  int port;
+
+  String error = checkPortWithQuery(portWithQuery, &port, &valQuery);
+
+  if(error){
+    return error;
+  }
+
+  if(valQuery.startsWith("type=")){
+    valQuery.replace("type=", "");
+  }else{
+    return NgReturnJson("type is not specified.", valQuery);
+  }
+
+  if(valQuery == "INPUT"){
+    pinMode(port, INPUT);
+  }else if(valQuery == "OUTPUT"){
+    pinMode(port, OUTPUT);
+  }else if(valQuery == "INPUT_PULLUP"){
+    pinMode(port, INPUT_PULLUP);
+  }else{
+    return NgReturnJson("Illegal type", valQuery);
+  }
+  return switchTypeReturnJson("OK", valQuery);
+
+}
+
+String checkPortWithQuery(String portWithQuery, int *port, String *query){
+  int at = portWithQuery.indexOf('?');
   if(at == -1){
     // queryが指定されていなかったら-1で返す.
-    return NgReturnJson("Query not found.", portWithValue);
+    return NgReturnJson("Query not found.", portWithQuery);
   }
-  String portQuery = portWithValue.substring(0, at);
+  String portQuery = portWithQuery.substring(0, at);
   if(!isInt(portQuery)){
     return NgReturnJson("Illegal port number.", portQuery);
   }
   *port = strToInt(portQuery);
+  *query = portWithQuery.substring(at + 1);
 
-  String valQuery = portWithValue.substring(at + 1);
+  return NULL;
+}
+
+String checkPortWithValue(String portWithValue, int *port, int *val){
+
+  String valQuery;
+
+  String error = checkPortWithQuery(portWithValue, port, &valQuery);
+
+  if(error){
+    return error;
+  }
+
   if(valQuery.startsWith("val=")){
     valQuery.replace("val=","");
   }else{
@@ -227,14 +275,14 @@ String aiRefSwitchTask(String ref){
   for(int i = 0; i < ARRAYSIZE(AI_REF_TBL); i++){
     if(ref.endsWith(AI_REF_TBL[i])){
       analogReference(AI_REF_VAL_TBL[i]);
-      return aiSwitchRefReturnJson("OK", AI_REF_TBL[i]);
+      return switchTypeReturnJson("OK", AI_REF_TBL[i]);
     }
   }
   ref.replace("?type=", "");
-  return aiSwitchRefReturnJson("NG", ref);
+  return switchTypeReturnJson("NG", ref);
 }
 
-String aiSwitchRefReturnJson(String msg, String refType){
+String switchTypeReturnJson(String msg, String refType){
   String body = wrapDq("msg") + ":" + wrapDq(msg)
     + "," + wrapDq("type") + ":" + wrapDq(refType);
   return wraped('{', body, '}');

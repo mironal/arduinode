@@ -68,6 +68,12 @@ var tests = [
   send:false
 },
 {
+  name:"Illegal Command.",
+  cmd:"aaaaa",
+  expect:JSON.stringify({msg:"NG", error:"Illegal command.", hint:"aaaaa"}),
+  send:false
+},
+{
   name:"AO write test.",
   cmd:"ao/write/3?val=25",
   expect:JSON.stringify({msg:"OK", port:3, val:25}),
@@ -182,17 +188,31 @@ var tests = [
   send:false
 },
 {
-  name:"DO write test. Illegal value. ",
+  name:"DO write test. Illegal value.",
   cmd:"do/write/3?val=hoge",
   expect:JSON.stringify({msg:"NG", error:"Illegal value.", hint:"hoge"}),
   send:false
 },
 {
-  name:"Illegal Command.",
-  cmd:"aaaaa",
-  expect:JSON.stringify({msg:"NG", cmd:"aaaaa"}),
+  name:"Switch pin mode. INPUT",
+  cmd:"d/mode/3?type=INPUT",
+  expect:JSON.stringify({msg:"OK", type:"INPUT"}),
+  send:false
+},
+{
+  name:"Switch pin mode. OUTPUT",
+  cmd:"d/mode/3?type=OUTPUT",
+  expect:JSON.stringify({msg:"OK", type:"OUTPUT"}),
+  send:false
+},
+{
+  name:"Switch pin mode. INPUT_PULLUP",
+  cmd:"d/mode/3?type=INPUT_PULLUP",
+  expect:JSON.stringify({msg:"OK", type:"INPUT_PULLUP"}),
   send:false
 }
+
+
 
 ];
 var test_index = 0;
