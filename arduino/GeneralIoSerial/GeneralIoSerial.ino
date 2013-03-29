@@ -24,6 +24,19 @@ struct TASK_FUNC {
   TASK_FUNC_PTR func;
 };
 
+// Stringとuint8_tを保持する構造体.
+struct STR_UINT8_PEAR {
+  String key;
+  uint8_t value;
+};
+
+// pinModeの名前と値を保持するテーブル.
+const struct STR_UINT8_PEAR PIN_MODE_TBL[] = {
+  {"INPUT", INPUT},
+  {"OUTPUT", OUTPUT},
+  {"INPUT_PULLUP", INPUT_PULLUP}
+};
+
 // prefixとタスク関数のテーブルを使ってキメる.
 const struct TASK_FUNC TASK_FUNC_TBL[] = {
   /*
@@ -140,17 +153,13 @@ String switchPinModeTask(String portWithQuery){
     return NgReturnJson("type is not specified.", valQuery);
   }
 
-  if(valQuery == "INPUT"){
-    pinMode(port, INPUT);
-  }else if(valQuery == "OUTPUT"){
-    pinMode(port, OUTPUT);
-  }else if(valQuery == "INPUT_PULLUP"){
-    pinMode(port, INPUT_PULLUP);
-  }else{
-    return NgReturnJson("Illegal type", valQuery);
+  for(int i = 0; i < ARRAYSIZE(PIN_MODE_TBL); i++){
+    if(valQuery == PIN_MODE_TBL[i].key){
+      pinMode(port, PIN_MODE_TBL[i].value);
+      return switchTypeReturnJson("OK", valQuery);
+    }
   }
-  return switchTypeReturnJson("OK", valQuery);
-
+  return NgReturnJson("Illegal type", valQuery);
 }
 
 String checkPortWithQuery(String portWithQuery, int *port, String *query){
