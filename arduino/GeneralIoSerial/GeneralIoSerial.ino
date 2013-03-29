@@ -3,18 +3,6 @@
 char read_buf[128];
 int buf_index = 0;
 
-const char* AI_REF_TBL[] = {
-  "DEFAULT",
-  "INTERNAL",
-  "EXTERNAL"
-};
-
-const uint8_t AI_REF_VAL_TBL[] = {
-  DEFAULT,
-  INTERNAL,
-  EXTERNAL
-};
-
 // 各々のコマンドに対して処理を行う関数の型
 typedef String (*TASK_FUNC_PTR)(String str);
 
@@ -35,6 +23,13 @@ const struct STR_UINT8_PEAR PIN_MODE_TBL[] = {
   {"INPUT", INPUT},
   {"OUTPUT", OUTPUT},
   {"INPUT_PULLUP", INPUT_PULLUP}
+};
+
+// AI Reference電圧の名前と値を保持するテーブル.
+const struct STR_UINT8_PEAR AI_REF_TBL[] = {
+  {"DEFAULT", DEFAULT},
+  {"INTERNAL", INTERNAL},
+  {"EXTERNAL", EXTERNAL}
 };
 
 // prefixとタスク関数のテーブルを使ってキメる.
@@ -282,9 +277,9 @@ String ioReadReturnJson(String msg, int port, int val){
  */
 String aiRefSwitchTask(String ref){
   for(int i = 0; i < ARRAYSIZE(AI_REF_TBL); i++){
-    if(ref.endsWith(AI_REF_TBL[i])){
-      analogReference(AI_REF_VAL_TBL[i]);
-      return switchTypeReturnJson("OK", AI_REF_TBL[i]);
+    if(ref.endsWith(AI_REF_TBL[i].key)){
+      analogReference(AI_REF_TBL[i].value);
+      return switchTypeReturnJson("OK", AI_REF_TBL[i].key);
     }
   }
   ref.replace("?type=", "");
