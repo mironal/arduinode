@@ -4,64 +4,64 @@ node.jsからArduinoを操作するニクい奴。
 
 Nice guy that you can manipulate the Arduino from node.js.
 
-# 問題提起、 Problem presentation
 
-node.jsとArduinoをシリアル通信で接続しハックする例が増えてきた。
+# このプロジェクトの成果物
 
-しかし、Arduinoのプログラミング作業はnodeのそれと比較して非常にダルい。
+## GeneralIoSerial.ino
 
-なぜなら"プログラミング -> コンパイル -> 書き込み"という作業を繰り返さなければいけないからだ。
+* Arduinoのプログラム
+* シリアルポート経由で様々な操作が可能
+* arduinodeに最適化済み
+* 現在はArduino UNOでのみ動作確認済
 
-これはnode.js(javascript)でのプログラミングと比較して非常に手間が掛かり、開発のリズムを崩すことに繋がる。
+## arduinode
 
-
-Example of serial communication to connect the Arduino hack node.js and has increased.
-
-However, the programming work of Arduino is very wearier than that of node.
-
-This is because you must repeat work called "programming - compilation - write to the Arduino".
-
-This takes effort than programming in node.js(javascript) very and leads to breaking rhythm of the development.
-
-# 問題の解決方法
-
-以下の2つの方法により、Arduino側の再プログラミングを不要にし、デバッグの容易なnode.jsのみで開発を可能にする。
-
-1. Arduinoは各種センサへのインターフェースに徹する
-2. node.jsでArduinoの制御を行い、Arduinoのプログラム変更を不要にする
-
-By two following methods,  I dispense with re-programming of the Arduino side and enable development only in easy node.js of the debugging.
-
-1. Arduino is devoted to interface to various sensors
-2. control the Arduino with node.js, eliminating the need for program changes Arduino.
-
-## 前提条件、Prerequisite
-
-上記問題の解決方法は以下の考えに基づく。
-
-1. Arduinoのプログラムは、センサー値の取得や、アクチュエータの制御をするだけである
-2. node.jsから見てArduinoは各種センサ・アクチュエータへのインターフェースとみなせる
-
-よってArduinoに複雑なロジックを持つプログラムを記述する必要は無くなり以下の利点が発生する。
-
-1. Arduinoのプログラムの変更が不要
-2. node.jsのみで快適な開発が可能
-
-これらは先に述べた問題を全て解決することが出来る。
+* node.jsのモジュール
+* GeneralIoSerial.inoとの通信を簡潔かつ、node.jsライクに記述可能
+* [node-serialport](https://github.com/voodootikigod/node-serialport)モジュールのラッパー.
+* npmリポジトリに登録済
 
 
-How to resolve the above problem is based on the following idea.
+# 使い方
 
-1. Arduino program is just getting the value and the sensor, the control of actuator.
-2. Arduino can be regarded as an interface to various sensors and actuators as seen from node.js.
+## GeneralIoSerial.ino
 
-Therefore, it is not necessary to describe a program with a complicated logic in Arduino , and the following advantages occur.
+ソースコードを入手し、お手持ちのarduinoに書き込むだけで準備完了です。
+
+### ソースコードの入手.
+
+```sh
+git clone https://github.com/mironal/Node-Arduino-General-IO.git
+```
+
+### コンパイル & 書き込み
+
+"Node-Arduino-General-IO/arduino/GeneralIoSerial"の中にある"GeneralIoSerial.ino"をarduinoの開発環境で開き、コンパイルしてarduinoに書き込む.
 
 
-1. No need to change the program of the Arduino.
-2. Comfortable development is possible in Node.js.
+## arduinode
 
-They will be able to solve all the problems mentioned above.
+npm(node package manager)を使って簡単にインストール出来ます。
+
+開発に使うディレクトリを作成.
+Create development directory.
+
+```sh
+mkdir dev_dir
+cd dev_dir
+```
+
+arduinodeのインストール。
+Install arduinode module.
+
+```sh
+npm install arduinode
+```
+
+### example code
+かみんぐすーん
+
+coming soon.
 
 # どのように操作が出来るのか？
 
@@ -71,7 +71,7 @@ node.jsから以下のようにアクセスし、Arduinoの制御を行うこと
 
 ```js
 // AI0の値の読み込み
-serial.send("ai/read/0", function(err, result){
+oSerial.inoserial.send("ai/read/0", function(era, result){
     if(err) throw err;
     console.log("AI0 : " + result);
     // AI0 : {"msg":"OK", "port":0,  "val":200}
@@ -104,6 +104,70 @@ serial.send("di/read/2", function(err, reuslt){
     // DI2 : {"msg":"OK", "port":0, "val":1}
 });
 ```
+
+# 哲学、Philosophy
+
+
+## 問題提起、 Problem presentation
+
+node.jsとArduinoをシリアル通信で接続しハックする例が増えてきた。
+
+しかし、Arduinoのプログラミング作業はnodeのそれと比較して非常にダルい。
+
+なぜなら"プログラミング -> コンパイル -> 書き込み"という作業を繰り返さなければいけないからだ。
+
+これはnode.js(javascript)でのプログラミングと比較して非常に手間が掛かり、開発のリズムを崩すことに繋がる。
+
+
+Example of serial communication to connect the Arduino hack node.js and has increased.
+
+However, the programming work of Arduino is very wearier than that of node.
+
+This is because you must repeat work called "programming - compilation - write to the Arduino".
+
+This takes effort than programming in node.js(javascript) very and leads to breaking rhythm of the development.
+
+## 問題の解決方法
+
+以下の2つの方法により、Arduino側の再プログラミングを不要にし、デバッグの容易なnode.jsのみで開発を可能にする。
+
+1. Arduinoは各種センサへのインターフェースに徹する
+2. node.jsでArduinoの制御を行い、Arduinoのプログラム変更を不要にする
+
+By two following methods,  I dispense with re-programming of the Arduino side and enable development only in easy node.js of the debugging.
+
+1. Arduino is devoted to interface to various sensors
+2. control the Arduino with node.js, eliminating the need for program changes Arduino.
+
+### 前提条件、Prerequisite
+
+上記問題の解決方法は以下の考えに基づく。
+
+1. Arduinoのプログラムは、センサー値の取得や、アクチュエータの制御をするだけである
+2. node.jsから見てArduinoは各種センサ・アクチュエータへのインターフェースとみなせる
+
+よってArduinoに複雑なロジックを持つプログラムを記述する必要は無くなり以下の利点が発生する。
+
+1. Arduinoのプログラムの変更が不要
+2. node.jsのみで快適な開発が可能
+
+これらは先に述べた問題を全て解決することが出来る。
+
+
+How to resolve the above problem is based on the following idea.
+
+1. Arduino program is just getting the value and the sensor, the control of actuator.
+2. Arduino can be regarded as an interface to various sensors and actuators as seen from node.js.
+
+Therefore, it is not necessary to describe a program with a complicated logic in Arduino , and the following advantages occur.
+
+
+1. No need to change the program of the Arduino.
+2. Comfortable development is possible in Node.js.
+
+They will be able to solve all the problems mentioned above.
+
+
 
 # 開発上の注意
 
