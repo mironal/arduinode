@@ -1,0 +1,21 @@
+{
+  "name": "arduinode",
+  "version": "0.0.0",
+  "description": "Node Arduino general io.",
+  "main": "arduinode.js",
+  "dependencies" : {
+    "serialport"   :  "*"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mironal/Node-Arduino-General-IO"
+  },
+  "keywords": [
+    "arduino"
+    ],
+  "author": "mironal",
+  "license": "MIT"
+}
