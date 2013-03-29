@@ -20,7 +20,7 @@ typedef String (*TASK_FUNC_PTR)(String str);
 
 // コマンドの文字列の先頭の文字と処理する関数を保持する構造体
 struct TASK_FUNC {
-  String prefix;
+  char* prefix;
   TASK_FUNC_PTR func;
 };
 
@@ -45,7 +45,7 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      {port}  => port number.
      example => ai/read/0
    */
-  {String("ai/read/"), &aiReadTask},
+  {"ai/read/", &aiReadTask},
 
   /*
     Switch AI reference volt.
@@ -53,7 +53,7 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
     {TYPE}  => DEFAULT | INTERNAL | EXTERNAL
     example => ai/ref?type=INTERNAL
    */
-  {String("ai/ref"), &aiRefSwitchTask},
+  {"ai/ref", &aiRefSwitchTask},
 
   /*
      Write AO port.
@@ -62,7 +62,7 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      {val}   => write value.
      example => ao/write/1?val=100
    */
-  {String("ao/write/"), &aoWriteTask},
+  {"ao/write/", &aoWriteTask},
 
   /*
      Read DI port.
@@ -70,7 +70,7 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      {port}  => port number.
      example => di/read/2
    */
-  {String("di/read/"), &diReadTask},
+  {"di/read/", &diReadTask},
 
 
   /*
@@ -81,7 +81,7 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      example => do/write/3?val=1
      example => do/write/3?val=HIGH
    */
-  {String("do/write/"), &doWriteTask},
+  {"do/write/", &doWriteTask},
 
   /*
      Swith digital pin mode.
@@ -90,13 +90,13 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      {type}   => INPUT | OUTPUT | INPUT_PULLUP
      example => d/mode/3?type=INPUT
    */
-  {String("d/mode/"), &switchPinModeTask},
+  {"d/mode/", &switchPinModeTask},
 
   /*
      Close serial port.
      format => system/close
    */
-  {String("system/close"), &closeSerial}
+  {"system/close", &closeSerial}
 };
 
 void setup() {
