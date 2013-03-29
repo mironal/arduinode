@@ -59,9 +59,33 @@ npm install arduinode
 ```
 
 ### example code
-かみんぐすーん
 
-coming soon.
+```js
+var Arduinode = require("arduinode").Arduinode;
+
+var portName = "/dev/tty.usbmodem1411";
+
+var arduinode = new Arduinode(portName, {
+  baudRate: 115200,
+  dataBits: 8,
+  parity: 'none',
+  stopBits: 1,
+  flowControl: false,
+});
+
+arduinode.on("open", function(){
+  arduinode.send("ai/read/2", function(resp){
+    console.log(resp);
+  });
+});
+
+arduinode.on("error", function(error){
+  console.log("error : " + error);
+});
+
+```
+
+
 
 # どのように操作が出来るのか？
 
@@ -70,8 +94,33 @@ Arduinoはプログラミング済みとする。
 node.jsから以下のようにアクセスし、Arduinoの制御を行うことが出来る。
 
 ```js
+var Arduinode = require("../module/arduinode").Arduinode;
+
+var portName = "/dev/tty.usbmodem1411";
+
+// open serial port.
+var arduinode = new Arduinode(portName, {
+  baudRate: 115200,
+  dataBits: 8,
+  parity: 'none',
+  stopBits: 1,
+  flowControl: false,
+});
+```
+
+
+```js
+// open event.
+arduinode.on("open", function(){
+  arduinode.send("ai/read/2", function(resp){
+    console.log(resp);
+  });
+});
+```
+
+```js
 // AI0の値の読み込み
-oSerial.inoserial.send("ai/read/0", function(era, result){
+arduinode.send("ai/read/0", function(era, result){
     if(err) throw err;
     console.log("AI0 : " + result);
     // AI0 : {"msg":"OK", "port":0,  "val":200}
@@ -80,7 +129,7 @@ oSerial.inoserial.send("ai/read/0", function(era, result){
 
 ```js
 // AO1に値の書き込み
-serial.send("ao/write/1?val=30", function(err, reuslt){
+arduinode.send("ao/write/1?val=30", function(err, reuslt){
     if(err) throw err;
     console.log("AO1 : " + result);
     // AO1 : {"msg":"OK", "port":2, "val":30}
@@ -89,7 +138,7 @@ serial.send("ao/write/1?val=30", function(err, reuslt){
 
 ```js
 // AIリファレンス電圧の変更
-serial.send("ai/ref?type=INTERNAL", function(err, reuslt){
+arduinode.send("ai/ref?type=INTERNAL", function(err, reuslt){
     if(err) throw err;
     console.log("AI REF : " + result);
     // AI REF : {"msg":"OK", "type":"INTERNAL"A}
@@ -98,7 +147,7 @@ serial.send("ai/ref?type=INTERNAL", function(err, reuslt){
 
 ```js
 // DI2の値の読み込み
-serial.send("di/read/2", function(err, reuslt){
+arduinode.send("di/read/2", function(err, reuslt){
     if(err) throw err;
     console.log("DI0 : " + result);
     // DI2 : {"msg":"OK", "port":0, "val":1}
