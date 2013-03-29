@@ -26,7 +26,7 @@ struct TASK_FUNC {
 
 // Stringとuint8_tを保持する構造体.
 struct STR_UINT8_PEAR {
-  String key;
+  char* key;
   uint8_t value;
 };
 
