@@ -25,7 +25,7 @@ function Arduinode(path, options, openImmediately){
         }else{
           var cb = self.callback.shift();
           if(typeof(cb) == "function"){
-            cb(self.error, new Buffer(self.buf).toString());
+            cb(self.error, JSON.parse(received));
             self.errro = null;
           }
         }
