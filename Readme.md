@@ -92,30 +92,15 @@ Arduinoはプログラミング済みとする。
 node.jsから以下のようにアクセスし、Arduinoの制御を行うことが出来る。
 
 ```js
-var Arduinode = require("../module/arduinode").Arduinode;
+var Arduinode = require("arduinode").Arduinode;
 
 var portName = "/dev/tty.usbmodem1411";
 
-// open serial port.
-var arduinode = new Arduinode(portName, {
-  baudRate: 115200,
-  dataBits: 8,
-  parity: 'none',
-  stopBits: 1,
-  flowControl: false,
+var arduinode = new Arduinode(portName, function(){
+    console.log("ready");
 });
 ```
 
-
-```js
-// open event.
-arduinode.on("open", function(){
-  arduinode.send("ai/read/2", function(err, result){
-    if(err) throw err;
-    console.log(result);
-  });
-});
-```
 
 ```js
 // AI0の値の読み込み

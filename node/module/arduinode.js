@@ -3,12 +3,22 @@
 var util = require('util');
 var SerialPort = require("serialport").SerialPort;
 
-function Arduinode(path, options, openImmediately){
+var options = {
+  baudRate: 115200,
+  dataBits: 8,
+  parity: 'none',
+  stopBits: 1,
+  flowControl: false,
+};
+
+function Arduinode(path, callback){
   var self = this;
-  self.sp = new SerialPort(path, options, openImmediately);
+  self.sp = new SerialPort(path, options);
   self.buf = [];
   self.callback = [];
   self.error = null;
+
+  self.on("ready", callback);
 
   // arduinoは\r\nを返してくる.
   self.sp.on("data", function(data){
@@ -21,7 +31,7 @@ function Arduinode(path, options, openImmediately){
       }else{
         var received = new Buffer(self.buf).toString();
         if(received === "READY"){
-          self.emit("open");
+          self.emit("ready");
         }else{
           var cb = self.callback.shift();
           if(typeof(cb) == "function"){
@@ -38,7 +48,6 @@ function Arduinode(path, options, openImmediately){
 util.inherits(Arduinode, SerialPort);
 
 Arduinode.prototype.send = function(cmd, callback) {
-
   var self = this;
   self.callback.push(callback);
   var sendCmd = cmd.replace(/\n$/, "") + "\n";
