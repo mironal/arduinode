@@ -1,6 +1,6 @@
 {
   "name": "arduinode",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Node Arduino general io.",
   "main": "arduinode.js",
   "dependencies" : {
