@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <div id="content">
+      <div id="left">
+        <div id="left-port">
+          <div class="port">
+            IOREF
+          </div>
+          <div class="port">
+            RESET
+          </div>
+          <div  class="port">
+            3.3V
+          </div>
+          <div class="port">
+            5V
+          </div>
+          <div class="port">
+            GND
+          </div>
+          <div class="port">
+            GND
+          </div>
+          <div class="port">
+            Vin
+          </div>
+          <div class="split">
+          </div>
+          <div class="port" >
+            A0
+          </div>
+          <div class="port" >
+            A1
+          </div>
+          <div class="port" >
+            A2
+          </div>
+          <div class="port" >
+            A3
+          </div>
+          <div class="port" >
+            A4
+          </div>
+          <div class="port" >
+            A5
+          </div>
+        </div>
+        <div id="left-value">
+          <div id="a0" class="port" >
+            A0
+          </div>
+          <div id="a1" class="port" >
+            A1
+          </div>
+          <div id="a2" class="port" >
+            A2
+          </div>
+          <div id="a3" class="port" >
+            A3
+          </div>
+          <div id="a4" class="port" >
+            A4
+          </div>
+          <div id="a5" class="port" >
+            A5
+          </div>
+        </div>
+      </div>
+      <div id="center">
+        <p id="arduino-text">Arduino UNO</p>
+      </div>
+      <div id="right">
+        <div id="right-port">
+          <div class="port">
+            AREF
+          </div>
+          <div class="port">
+            GND
+          </div>
+          <div class="port">
+            D13
+          </div>
+          <div class="port">
+            D12
+          </div>
+          <div class="port pwm">
+            D11
+          </div>
+          <div class="port pwm">
+            D10
+          </div>
+          <div class="port pwm">
+            D9
+          </div>
+          <div class="port">
+            D8
+          </div>
+          <div class="split">
+          </div>
+          <div class="port">
+            D7
+          </div>
+          <div class="port pwm">
+            D6
+          </div>
+          <div class="port pwm">
+            D5
+          </div>
+          <div class="port">
+            D4
+          </div>
+          <div class="port pwm">
+            D3
+          </div>
+          <div class="port">
+            D2
+          </div>
+          <div class="port">
+            D1
+          </div>
+          <div class="port">
+            D0
+          </div>
+        </div>
+        <div id="right-value">
+          <div id="d13" class="port" >
+            D13
+          </div>
+          <div id="d12" class="port" >
+            D12
+          </div>
+          <div id="d11" class="port" >
+            D11
+          </div>
+          <div id="d10" class="port" >
+            D10
+          </div>
+          <div id="d9" class="port" >
+            D9
+          </div>
+          <div id="d8" class="port" >
+            D8
+          </div>
+          <div class="split">
+          </div>
+          <div id="d7" class="port" >
+            D7
+          </div>
+          <div id="d6" class="port" >
+            D6
+          </div>
+          <div id="d5" class="port" >
+            D5
+          </div>
+          <div id="d4" class="port" >
+            D4
+          </div>
+          <div id="d3" class="port" >
+            D3
+          </div>
+          <div id="d2" class="port" >
+            D2
+          </div>
+          <div id="d1" class="port" >
+            D1
+          </div>
+          <div id="d0" class="port" >
+            D0
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascripts/arduino.js"></script>
+  </body>
+</html>

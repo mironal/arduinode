@@ -1,0 +1,68 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+#arduino {
+  //width: 300px;
+}
+
+div #left {
+  float: left;
+  margin-top: 81px;
+}
+
+div #center {
+  float: left;
+  width: 250px;
+  height: 460px;
+  margin-left: 20px;
+  margin-right: 20px;
+  background: #0000CD;
+  border-radius: 5px;
+}
+
+div #right {
+  float: left;
+}
+
+
+div #left-port {
+  float: left;
+  width: 40px;
+}
+
+div #left-value {
+  float: left;
+  margin-top: 209px;
+}
+
+div #right-port {
+  float: left;
+  width: 40px;
+}
+
+div #right-value {
+  float: left;
+  margin-top: 54px;
+}
+
+div .port {
+  margin-bottom: 2px;
+  padding: 4px;
+  min-width: 40px;
+}
+
+div .split {
+  height: 20px;
+}
+
+#arduino-text {
+  text-align: center;
+  font-size: 30px;
+  color: gainsboro;
+}
