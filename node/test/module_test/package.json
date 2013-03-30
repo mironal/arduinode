@@ -1,0 +1,9 @@
+{
+  "name": "module_test",
+  "dependencies": {
+    "async": "*",
+    "should": "*"
+  }
+
+
+}

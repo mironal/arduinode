@@ -47,6 +47,12 @@ function Arduinode(path, callback){
 
 util.inherits(Arduinode, SerialPort);
 
+/*
+ *
+ * send command.
+ *
+ * Low level API
+ */
 Arduinode.prototype.send = function(cmd, callback) {
   var self = this;
   self.callback.push(callback);
@@ -59,6 +65,14 @@ Arduinode.prototype.send = function(cmd, callback) {
       self.error = "Write bytes mismatch.";
     }
   });
+}
+
+/*
+ * High level API
+ */
+
+Arduinode.prototype.readAi = function(port, callback) {
+  this.send("ai/read/" + port, callback);
 }
 
 module.exports.Arduinode = Arduinode;
