@@ -1,4 +1,4 @@
-var Arduinode = require("../module/arduinode").Arduinode;
+var Arduinode = require("../../module/arduinode").Arduinode;
 
 var portName = "/dev/tty.usbmodem1411";
 
@@ -11,7 +11,8 @@ var arduinode = new Arduinode(portName, {
 });
 
 arduinode.on("open", function(){
-  arduinode.send("ai/read/2", function(resp){
+  arduinode.send("ai/read/2", function(err, resp){
+    if(err) throw err;
     console.log(resp);
   });
 });
