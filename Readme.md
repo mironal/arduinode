@@ -74,14 +74,12 @@ var arduinode = new Arduinode(portName, {
 });
 
 arduinode.on("open", function(){
-  arduinode.send("ai/read/2", function(resp){
-    console.log(resp);
+  arduinode.send("ai/read/2", function(err, result){
+    if(err) throw err;
+    console.log(result);
   });
 });
 
-arduinode.on("error", function(error){
-  console.log("error : " + error);
-});
 
 ```
 
@@ -112,15 +110,16 @@ var arduinode = new Arduinode(portName, {
 ```js
 // open event.
 arduinode.on("open", function(){
-  arduinode.send("ai/read/2", function(resp){
-    console.log(resp);
+  arduinode.send("ai/read/2", function(err, result){
+    if(err) throw err;
+    console.log(result);
   });
 });
 ```
 
 ```js
 // AI0の値の読み込み
-arduinode.send("ai/read/0", function(era, result){
+arduinode.send("ai/read/0", function(err, result){
     if(err) throw err;
     console.log("AI0 : " + result);
     // AI0 : {"msg":"OK", "port":0,  "val":200}
