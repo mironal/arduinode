@@ -37,7 +37,10 @@ function Arduinode(path, callback){
           if(typeof(cb) == "function"){
             var result = JSON.parse(received);
             if(result.msg == "NG"){
-              cb(result, result);
+              var error = new Error();
+              error.name = "Command error.";
+              error.message = result.error;
+              cb(error, result);
             }else{
               cb(self.error, JSON.parse(received));
             }
