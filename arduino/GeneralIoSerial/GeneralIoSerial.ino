@@ -160,7 +160,7 @@ String switchPinModeTask(String portWithQuery){
       return switchTypeReturnJson("OK", valQuery);
     }
   }
-  return NgReturnJson("Illegal type", valQuery);
+  return NgReturnJson("Illegal type.", valQuery);
 }
 
 String checkPortWithQuery(String portWithQuery, int *port, String *query){
@@ -223,7 +223,7 @@ String aoWriteTask(String portWithValue){
   }
 
   analogWrite(port, val);
-  return ioWriteReturnJson("OK", port, val);
+  return ioReturnJson("OK", port, val);
 }
 
 
@@ -242,41 +242,47 @@ String doWriteTask(String portWithValue){
     digitalWrite(port, LOW);
     val = 0;
   }
-  return ioWriteReturnJson("OK", port, val);
+  return ioReturnJson("OK", port, val);
 }
 
-String ioWriteReturnJson(String msg, int port, int val){
+
+String checkPortQuery(String portQuery){
+  if(!isInt(portQuery)){
+    return NgReturnJson("Illegal port number.", portQuery);
+  }
+  return NULL;
+}
+
+String diReadTask(String portQuery){
+  String error = checkPortQuery(portQuery);
+  if(error){
+    return error;
+  }
+  int port = strToInt(portQuery);
+  int val = digitalRead(port);
+  return ioReturnJson("OK", port, val);
+}
+
+/*
+   ai/read/以下が入ってくる.
+ */
+String aiReadTask(String portQuery){
+  String error = checkPortQuery(portQuery);
+  if(error){
+    return error;
+  }
+  int port = strToInt(portQuery);
+  int val = analogRead(port);
+  return ioReturnJson("OK", port, val);
+}
+
+String ioReturnJson(String msg, int port, int val){
   String body = wrapDq("msg") + ":"+wrapDq(msg)
     + "," + wrapDq("port") + ":" + String(port)
     + "," + wrapDq("val") + ":" + String(val);
   return wraped('{', body, '}');
 }
 
-String diReadTask(String portQuery){
-  if(!isInt(portQuery)){
-    return ioReadReturnJson("NG", -1, -1);
-  }
-  int port = strToInt(portQuery);
-  int val = digitalRead(port);
-  return ioReadReturnJson("OK", port, val);
-}
-
-String aiReadTask(String portQuery){
-  if(!isInt(portQuery)){
-    return ioReadReturnJson("NG", -1, -1);
-  }
-  int port = strToInt(portQuery);
-  int val = analogRead(port);
-  return ioReadReturnJson("OK", port, val);
-
-}
-
-String ioReadReturnJson(String msg, int port, int val){
-  String body = wrapDq("msg") + ":" + wrapDq(msg)
-    + "," + wrapDq("port") + ":" + String(port)
-    + "," + wrapDq("val") + ":" + String(val);
-  return wraped('{', body, '}');
-}
 
 /*
    AIリファレンス電圧切替.
@@ -289,7 +295,7 @@ String aiRefSwitchTask(String ref){
     }
   }
   ref.replace("?type=", "");
-  return switchTypeReturnJson("NG", ref);
+  return NgReturnJson("Illegal type.", ref);
 }
 
 String switchTypeReturnJson(String msg, String refType){
