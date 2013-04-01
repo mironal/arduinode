@@ -494,8 +494,6 @@ describe("Arduinode test", function(){
             err.name.should.equal("Command error.");
           });
 
-          // TODO Query not found.よりIllegal port numberの方が適しているので
-          // あとで修正する.
           it("errのmessageがQuery not found.", function(){
             err.message.should.equal("Query not found.");
           });
