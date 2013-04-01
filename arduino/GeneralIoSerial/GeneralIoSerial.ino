@@ -163,12 +163,23 @@ String switchPinModeTask(String portWithQuery){
   return NgReturnJson("Illegal type.", valQuery);
 }
 
-String checkPortWithQuery(String portWithQuery, int *port, String *query){
-  int at = portWithQuery.indexOf('?');
-  if(at == -1){
+String checkHasQuery(String query, int *at){
+  *at = query.indexOf('?');
+  if(*at == -1){
     // queryが指定されていなかったら-1で返す.
-    return NgReturnJson("Query not found.", portWithQuery);
+    return NgReturnJson("Query not found.", query);
   }
+  return NULL;
+}
+
+String checkPortWithQuery(String portWithQuery, int *port, String *query){
+
+  int at = 0;
+  String error = checkHasQuery(portWithQuery, &at);
+  if(error){
+    return error;
+  }
+
   String portQuery = portWithQuery.substring(0, at);
   if(!isInt(portQuery)){
     return NgReturnJson("Illegal port number.", portQuery);
@@ -288,6 +299,12 @@ String ioReturnJson(String msg, int port, int val){
    AIリファレンス電圧切替.
  */
 String aiRefSwitchTask(String ref){
+  int at = 0;
+  String error = checkHasQuery(ref, &at);
+  if(error){
+    return error;
+  }
+
   for(int i = 0; i < ARRAYSIZE(AI_REF_TBL); i++){
     if(ref.endsWith(AI_REF_TBL[i].key)){
       analogReference(AI_REF_TBL[i].value);
