@@ -360,9 +360,8 @@ describe("Arduinode test", function(){
           it("errのnameがCommand error.", function(){
             err.name.should.equal("Command error.");
           });
-          it("errのmessageがIllegal type", function(){
-            //TODO このエラーはおかしいのでqueryが無い旨のメッセージを生成するようにする
-            err.message.should.equal("Illegal type.");
+          it("errのmessageがQuery not found", function(){
+            err.message.should.equal("Query not found.");
           });
         });
       });
@@ -495,8 +494,6 @@ describe("Arduinode test", function(){
             err.name.should.equal("Command error.");
           });
 
-          // TODO Query not found.よりIllegal port numberの方が適しているので
-          // あとで修正する.
           it("errのmessageがQuery not found.", function(){
             err.message.should.equal("Query not found.");
           });
