@@ -1,9 +1,7 @@
 {
-  "name": "module_test",
+  "name": "module_test" ,
+  "private": true ,
   "dependencies": {
-    "async": "*",
-    "should": "*"
+    "should" : "*"
   }
-
-
 }

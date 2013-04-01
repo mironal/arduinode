@@ -35,7 +35,15 @@ function Arduinode(path, callback){
         }else{
           var cb = self.callback.shift();
           if(typeof(cb) == "function"){
-            cb(self.error, JSON.parse(received));
+            var result = JSON.parse(received);
+            if(result.msg == "NG"){
+              var error = new Error();
+              error.name = "Command error.";
+              error.message = result.error;
+              cb(error, result);
+            }else{
+              cb(self.error, JSON.parse(received));
+            }
             self.errro = null;
           }
         }
