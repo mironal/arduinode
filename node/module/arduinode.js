@@ -63,16 +63,28 @@ util.inherits(Arduinode, SerialPort);
  */
 Arduinode.prototype.send = function(cmd, callback) {
   var self = this;
-  self.callback.push(callback);
   var sendCmd = cmd.replace(/\n$/, "") + "\n";
-  self.sp.write(sendCmd, function(err, writeBytes){
-    if(err){
-      self.error = err;
-      self.emit("error", err);
-    }else if(writeBytes != sendCmd.length){
-      self.error = "Write bytes mismatch.";
-    }
-  });
+  if(sendCmd.length < 100){
+    self.callback.push(callback);
+    self.sp.write(sendCmd, function(err, writeBytes){
+      if(err) throw err;
+
+      if(writeBytes != sendCmd.length){
+        var error = new Error();
+        error.name = "Send error.";
+        error.message = "Write bytes mismatch."
+        throw error;
+      }
+    });
+  }else{
+    // Arduinoのバッファがあふれるようなサイズのコマンドは
+    // 送信せずにエラーを発生させる。
+    // Arduinoの受信バッファサイズは128byteであるが、100に制限する.
+    var error = new Error();
+    error.name = "Command error.";
+    error.message = "Command is too long.";
+    callback(error, null);
+  }
 }
 
 /*
@@ -129,7 +141,7 @@ analogRead([port]);
 ```
 
 */
-Arduinode.prototype.analogRead(port, callback) {
+Arduinode.prototype.analogRead = function(port, callback) {
   var self = this;
   self.send("ai/read/" + port, callback);
 }
@@ -182,7 +194,7 @@ analogWrite([port], [val]);
 ```
 
 */
-Arduinode.prototype.analogWrite(port, val, callback) {
+Arduinode.prototype.analogWrite = function(port, val, callback) {
   var self = this;
   self.send("ao/write/" + port + "?val=" + val, callback);
 }
@@ -240,7 +252,7 @@ analogReference([type]);
 ```
 
 */
-Arduinode.prototype.analogReference(type, callback) {
+Arduinode.prototype.analogReference = function(type, callback) {
   var self = this;
   self.send("ai/ref?type" + type, callback);
 }
@@ -295,7 +307,7 @@ digitalRead([port]);
 ```
 
 */
-Arduinode.prototype.digitalRead(port, callback) {
+Arduinode.prototype.digitalRead = function(port, callback) {
   var self = this;
   self.send("di/read/" + port, callback);
 }
@@ -354,7 +366,7 @@ digitalWrite([port], [val]);
 ```
 
 */
-Arduinode.prototype.digitalWrite(port, val, callback) {
+Arduinode.prototype.digitalWrite = function(port, val, callback) {
   var self = this;
   self.send("do/write/" + port + "?val=" + val, callback);
 }
@@ -416,7 +428,7 @@ pinMode([port], [type);
 ```
 
 */
-Arduinode.prototype.pinMode(port, type, callback) {
+Arduinode.prototype.pinMode = function(port, type, callback) {
   var self = this;
   self.send("d/mode/" + port + "?type=" + type, callback);
 }
