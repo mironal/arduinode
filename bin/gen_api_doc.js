@@ -30,7 +30,7 @@ console.log("# 目次");
 for(var i = 0; i < contents.length; i++){
   var c = contents[i];
   if(level1Header.test(c)){
-    var title = c.match(/# (.*)$/);
+    var title = c.match(/# (.*) /);
     var name = c.match(/<a name="(.*)">/);
     if( (title != null) &&
         (title.length > 1) &&
@@ -39,7 +39,7 @@ for(var i = 0; i < contents.length; i++){
           console.log("* [" + title[1] + "](#" + name[1] + ")");
         }
   }else if(level2Header.test(c)){
-    var title = c.match(/## (.*)$/);
+    var title = c.match(/## (.*) /);
     var name = c.match(/<a name="(.*)">/);
     if( (title != null) &&
         (title.length > 1) &&
