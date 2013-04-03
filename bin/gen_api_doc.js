@@ -30,22 +30,16 @@ console.log("# 目次");
 for(var i = 0; i < contents.length; i++){
   var c = contents[i];
   if(level1Header.test(c)){
-    var title = c.match(/# (.*) /);
-    var id = c.match(/{(.*)}/);
+    var title = c.match(/# (.*)$/);
     if( (title != null) &&
-        (id != null) &&
-        (title.length > 1) &&
-        (id.length > 1)){
-          console.log("* [" + title[1] + "](" + id[1] + ")");
+        (title.length > 1)){
+          console.log("* [" + title[1] + "](" + title[1] + ")");
         }
   }else if(level2Header.test(c)){
-    var title = c.match(/## (.*) /);
-    var id = c.match(/{(.*)}/);
+    var title = c.match(/## (.*)$/);
     if( (title != null) &&
-        (id != null) &&
-        (title.length > 1) &&
-        (id.length > 1)){
-          console.log("    * [" + title[1] + " : " +  id[1].replace("#", "") + "](" + id[1] + ")");
+        (title.length > 1) ){
+          console.log("    * [" + title[1] + "](" + title[1] + ")");
         }
   }
 }
