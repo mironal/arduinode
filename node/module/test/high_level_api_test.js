@@ -6,7 +6,7 @@ var Arduinode = require("../arduinode").Arduinode;
 
 var portName = "/dev/tty.usbmodem1411";
 
-describe("Arduinode low level API test", function(){
+describe("Arduinode high level API test", function(){
   var arduinode;
   before(function(done){
     arduinode = new Arduinode(portName, function(){
