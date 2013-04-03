@@ -93,13 +93,13 @@ Arduinode.prototype.send = function(cmd, callback) {
 
 /***
 
-# Analogポートに関する操作 {#analog}
+# Analogポートに関する操作 <a name="analog">
 
 */
 
 /***
 
-## AD値読み込み {#analogRead}
+## AD値読み込み <a name="analogRead">
 
 指定したポートのAD値を読み込む。
 
@@ -154,7 +154,7 @@ Arduinode.prototype.analogRead = function(port, callback) {
 
 /***
 
-## アナログ値(PWM)出力 {#analogWrite}
+## アナログ値(PWM)出力 <a name="analogWrite">
 
 指定したポートからアナログ値を出力します。
 
@@ -207,7 +207,7 @@ Arduinode.prototype.analogWrite = function(port, val, callback) {
 
 /***
 
-## Analog入力基準電圧変更 {#analogReference}
+## Analog入力基準電圧変更 <a name="analogReference">
 
 AD値読み込みに使用される基準電圧源を変更します。
 
@@ -265,14 +265,14 @@ Arduinode.prototype.analogReference = function(type, callback) {
 
 /***
 
-# Digitalポートに関する操作 {#digital}
+# Digitalポートに関する操作 <a name="digital">
 
 */
 
 
 /***
 
-## ポート値読み込み {#analogRead}
+## ポート値読み込み <a name="digitalRead">
 
 指定したポートの値(0 or 1)を読み込みます。
 
@@ -328,7 +328,7 @@ Arduinode.prototype.digitalRead = function(port, callback) {
 
 /***
 
-## ポート出力 {#digitalWrite}
+## ポート出力 <a name="digitalWrite">
 
 指定したポートに値を書き込みます。
 
@@ -387,7 +387,7 @@ Arduinode.prototype.digitalWrite = function(port, val, callback) {
 
 /***
 
-## ピンモード変更 {#pinMode}
+## ピンモード変更 <a name="pinMode">
 
 指定したポートのピンモードを変更します。
 

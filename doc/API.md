@@ -4,14 +4,14 @@
     * [アナログ値(PWM)出力 : analogWrite](#analogWrite)
     * [Analog入力基準電圧変更 : analogReference](#analogReference)
 * [Digitalポートに関する操作](#digital)
-    * [ポート値読み込み : analogRead](#analogRead)
+    * [ポート値読み込み : digitalRead](#digitalRead)
     * [ポート出力 : digitalWrite](#digitalWrite)
     * [ピンモード変更 : pinMode](#pinMode)
 
-# Analogポートに関する操作 {#analog}
+# Analogポートに関する操作 <a name="analog">
 
 
-## AD値読み込み {#analogRead}
+## AD値読み込み <a name="analogRead">
 
 指定したポートのAD値を読み込む。
 
@@ -59,7 +59,7 @@ analogRead([port]);
 ```
 
 
-## アナログ値(PWM)出力 {#analogWrite}
+## アナログ値(PWM)出力 <a name="analogWrite">
 
 指定したポートからアナログ値を出力します。
 
@@ -105,7 +105,7 @@ analogWrite([port], [val]);
 ```
 
 
-## Analog入力基準電圧変更 {#analogReference}
+## Analog入力基準電圧変更 <a name="analogReference">
 
 AD値読み込みに使用される基準電圧源を変更します。
 
@@ -156,10 +156,10 @@ analogReference([type]);
 ```
 
 
-# Digitalポートに関する操作 {#digital}
+# Digitalポートに関する操作 <a name="digital">
 
 
-## ポート値読み込み {#analogRead}
+## ポート値読み込み <a name="digitalRead">
 
 指定したポートの値(0 or 1)を読み込みます。
 
@@ -207,7 +207,7 @@ digitalRead([port]);
 ```
 
 
-## ポート出力 {#digitalWrite}
+## ポート出力 <a name="digitalWrite">
 
 指定したポートに値を書き込みます。
 
@@ -258,7 +258,7 @@ digitalWrite([port], [val]);
 ```
 
 
-## ピンモード変更 {#pinMode}
+## ピンモード変更 <a name="pinMode">
 
 指定したポートのピンモードを変更します。
 
