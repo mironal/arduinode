@@ -65,21 +65,10 @@ var Arduinode = require("arduinode").Arduinode;
 
 var portName = "/dev/tty.usbmodem1411";
 
-var arduinode = new Arduinode(portName, {
-  baudRate: 115200,
-  dataBits: 8,
-  parity: 'none',
-  stopBits: 1,
-  flowControl: false,
+arduinode = new Arduinode(portName, function(){
+    console.log("open");
+    var value = arduinode.analogRead(0);
 });
-
-arduinode.on("open", function(){
-  arduinode.send("ai/read/2", function(err, result){
-    if(err) throw err;
-    console.log(result);
-  });
-});
-
 
 ```
 
@@ -96,6 +85,7 @@ var Arduinode = require("arduinode").Arduinode;
 
 var portName = "/dev/tty.usbmodem1411";
 
+// Arduinoと接続
 var arduinode = new Arduinode(portName, function(){
     console.log("ready");
 });
@@ -104,7 +94,7 @@ var arduinode = new Arduinode(portName, function(){
 
 ```js
 // AI0の値の読み込み
-arduinode.send("ai/read/0", function(err, result){
+arduinode.analogRead(0, function(err, result){
     if(err) throw err;
     console.log("AI0 : " + result);
     // AI0 : {"msg":"OK", "port":0,  "val":200}
@@ -113,28 +103,28 @@ arduinode.send("ai/read/0", function(err, result){
 
 ```js
 // AO1に値の書き込み
-arduinode.send("ao/write/1?val=30", function(err, reuslt){
+arduinode.analogWrite(1, 25, function(err, result){
     if(err) throw err;
     console.log("AO1 : " + result);
-    // AO1 : {"msg":"OK", "port":2, "val":30}
+    // AO1 : {"msg":"OK", "port":1, "val":25}
 });
 ```
 
 ```js
 // AIリファレンス電圧の変更
-arduinode.send("ai/ref?type=INTERNAL", function(err, reuslt){
+arduinode.analogReference("INTERNAL", function(err, result){
     if(err) throw err;
     console.log("AI REF : " + result);
-    // AI REF : {"msg":"OK", "type":"INTERNAL"A}
+    // AI REF : {"msg":"OK", "type":"INTERNAL"}
 });
 ```
 
 ```js
 // DI2の値の読み込み
-arduinode.send("di/read/2", function(err, reuslt){
+arduinode.digitalRead(2, function(err, result){
     if(err) throw err;
-    console.log("DI0 : " + result);
-    // DI2 : {"msg":"OK", "port":0, "val":1}
+    console.log("DI2 : " + result);
+    // DI2 : {"msg":"OK", "port":2, "val":1}
 });
 ```
 
