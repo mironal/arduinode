@@ -31,9 +31,12 @@ for(var i = 0; i < contents.length; i++){
   var c = contents[i];
   if(level1Header.test(c)){
     var title = c.match(/# (.*)$/);
+    var name = c.match(/<a name="(.*)">/);
     if( (title != null) &&
-        (title.length > 1)){
-          console.log("* [" + title[1] + "](#" + title[1] + ")");
+        (title.length > 1) &&
+        (name != null) &&
+        (name.length > 1) ){
+          console.log("* [" + title[1] + "](#" + name[1] + ")");
         }
   }else if(level2Header.test(c)){
     var title = c.match(/## (.*)$/);
