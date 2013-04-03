@@ -45,7 +45,7 @@ for(var i = 0; i < contents.length; i++){
         (title.length > 1) &&
         (name != null) &&
         (name.length > 1)){
-          console.log("    * [" + title[1] + "](#" + name[1] + ")");
+          console.log("    * [" + title[1] + " : " + name[1].replace("#", "") + "](#" + name[1] + ")");
         }
   }
 }

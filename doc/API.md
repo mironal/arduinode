@@ -1,12 +1,12 @@
 # 目次
 * [Analogポートに関する操作](#analog)
-    * [AD値読み込み](#analogRead)
-    * [アナログ値(PWM)出力](#analogWrite)
-    * [Analog入力基準電圧変更](#analogReference)
+    * [AD値読み込み : analogRead](#analogRead)
+    * [アナログ値(PWM)出力 : analogWrite](#analogWrite)
+    * [Analog入力基準電圧変更 : analogReference](#analogReference)
 * [Digitalポートに関する操作](#digital)
-    * [ポート値読み込み](#digitalRead)
-    * [ポート出力](#digitalWrite)
-    * [ピンモード変更](#pinMode)
+    * [ポート値読み込み : digitalRead](#digitalRead)
+    * [ポート出力 : digitalWrite](#digitalWrite)
+    * [ピンモード変更 : pinMode](#pinMode)
 
 # Analogポートに関する操作 <a name="analog">
 
