@@ -235,7 +235,7 @@ arduinode.send("do/write/0?val=1", function(err, result){
 );
 
 // High level API
-arduinode.analogWrite(0, 0,function(err, result){
+arduinode.digitalWrite(0, 0,function(err, result){
     if(err) throw err;
     console.log(result);
 });
@@ -244,7 +244,7 @@ arduinode.analogWrite(0, 0,function(err, result){
 ### 対応するArduinoの操作
 
 ```c
-analogWrite([port], [val]);
+digitalWrite([port], [val]);
 ```
 ## ピンモード変更
 

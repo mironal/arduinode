@@ -2,11 +2,11 @@
 
 var should = require("should");
 
-var Arduinode = require("../../module/arduinode").Arduinode;
+var Arduinode = require("../arduinode").Arduinode;
 
 var portName = "/dev/tty.usbmodem1411";
 
-describe("Arduinode test", function(){
+describe("Arduinode low level API test", function(){
   var arduinode;
 
   before(function(done){
@@ -57,8 +57,7 @@ describe("Arduinode test", function(){
         err.message.should.equal("Illegal command.");
       });
     });
-/*
- * 何らかのバグがあるらしく、こいつはとりあえず実行しない.
+
     describe("長すぎるコマンド", function(){
       var err;
       var result;
@@ -79,7 +78,6 @@ describe("Arduinode test", function(){
         err.message.should.equal("Command is too long.");
       });
     });
-    */
   });
 
 
