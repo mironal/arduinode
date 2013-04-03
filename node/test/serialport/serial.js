@@ -124,7 +124,7 @@ var tests = [
 {
   name:"AI Reference test. Unknown type.",
   cmd:"ai/ref?type=hoge",
-  expect:JSON.stringify({msg:"NG", type:"hoge"}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal type.", hint:"hoge"}),
   send:false
 },
 {
@@ -136,7 +136,7 @@ var tests = [
 {
   name:"AI read test. Illegal port.",
   cmd:"ai/read/a",
-  expect:JSON.stringify({msg:"NG", port:-1, val:-1}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal port number.", hint:"a"}),
   send:false
 },
 {
@@ -148,7 +148,7 @@ var tests = [
 {
   name:"DI read test. Illegal port",
   cmd:"di/read/aa",
-  expect:JSON.stringify({msg:"NG", port:-1, val:-1}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal port number.", hint:"aa"}),
   send:false
 },
 {
@@ -209,6 +209,12 @@ var tests = [
   name:"Switch pin mode. INPUT_PULLUP",
   cmd:"d/mode/3?type=INPUT_PULLUP",
   expect:JSON.stringify({msg:"OK", type:"INPUT_PULLUP"}),
+  send:false
+},
+{
+  name:"Switch pin mode. Unknown type.",
+  cmd:"d/mode/3?type=hogehoge",
+  expect:JSON.stringify({msg:"NG",error:"Illegal type.", hint:"hogehoge"}),
   send:false
 },
 {

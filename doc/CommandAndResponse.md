@@ -1,101 +1,14 @@
-"use strict";
+# 各種操作
 
-var util = require('util');
-var SerialPort = require("serialport").SerialPort;
+* ポート番号などの変数は\[\]で囲む
+* 改行コードは必要ない(arduinode.jsが吸収する)
+* 現時点(2013/04/01)ではLow level APIのみ実装
 
-var options = {
-  baudRate: 115200,
-  dataBits: 8,
-  parity: 'none',
-  stopBits: 1,
-  flowControl: false,
-};
-
-function Arduinode(path, callback){
-  var self = this;
-  self.sp = new SerialPort(path, options);
-  self.buf = [];
-  self.callback = [];
-  self.error = null;
-
-  self.on("ready", callback);
-
-  // arduinoは\r\nを返してくる.
-  self.sp.on("data", function(data){
-    for(var i = 0; i < data.length; i++){
-      if( data[i] != 10){
-        // \rは無視する.
-        if(data[i] != 13){
-          self.buf.push(data[i]);
-        }
-      }else{
-        var received = new Buffer(self.buf).toString();
-        if(received === "READY"){
-          self.emit("ready");
-        }else{
-          var cb = self.callback.shift();
-          if(typeof(cb) == "function"){
-            var result = JSON.parse(received);
-            if(result.msg == "NG"){
-              var error = new Error();
-              error.name = "Command error.";
-              error.message = result.error;
-              cb(error, result);
-            }else{
-              cb(self.error, JSON.parse(received));
-            }
-            self.errro = null;
-          }
-        }
-        self.buf = [];
-      }
-    }
-  });
-}
-
-util.inherits(Arduinode, SerialPort);
-
-/*
- *
- * send command.
- *
- * Low level API
- */
-Arduinode.prototype.send = function(cmd, callback) {
-  var self = this;
-  var sendCmd = cmd.replace(/\n$/, "") + "\n";
-  if(sendCmd.length < 100){
-    self.callback.push(callback);
-    self.sp.write(sendCmd, function(err, writeBytes){
-      if(err) throw err;
-
-      if(writeBytes != sendCmd.length){
-        var error = new Error();
-        error.name = "Send error.";
-        error.message = "Write bytes mismatch."
-        throw error;
-      }
-    });
-  }else{
-    // Arduinoのバッファがあふれるようなサイズのコマンドは
-    // 送信せずにエラーを発生させる。
-    // Arduinoの受信バッファサイズは128byteであるが、100に制限する.
-    var error = new Error();
-    error.name = "Command error.";
-    error.message = "Command is too long.";
-    callback(error, null);
-  }
-}
-
-/*
- * High level API
- */
-
-/***
+# Analogポートに関する操作
 
 ## AD値読み込み
 
-指定したポートのAD値を読み込む。
+指定したポート番号のAD値を読みます。
 
 ### リクエスト(node.js -> Arduino)
 
@@ -123,14 +36,14 @@ ai/read/[port]
 ```js
 // High level API
 arduinode.analogRead(0, function(err, reuslt){
-if(err) throw err;
-console.log(result);
+    if(err) throw err;
+    console.log(result);
 });
 
 // Low level API
 arduinode.send("ai/read/0", function(err, result){
-if(err) throw err;
-console.log(result);
+    if(err) throw err;
+    console.log(result);
 });
 ```
 
@@ -139,14 +52,6 @@ console.log(result);
 ```c
 analogRead([port]);
 ```
-
-*/
-Arduinode.prototype.analogRead = function(port, callback) {
-  var self = this;
-  self.send("ai/read/" + port, callback);
-}
-
-/***
 
 ## アナログ値(PWM)出力
 
@@ -192,14 +97,6 @@ arduinode.analogWrite(1, 100, function(err, result){
 ```c
 analogWrite([port], [val]);
 ```
-
-*/
-Arduinode.prototype.analogWrite = function(port, val, callback) {
-  var self = this;
-  self.send("ao/write/" + port + "?val=" + val, callback);
-}
-
-/***
 
 ## Analog入力基準電圧変更
 
@@ -251,13 +148,7 @@ arduinode.analogReference("INTERNAL", function(err, result){
 analogReference([type]);
 ```
 
-*/
-Arduinode.prototype.analogReference = function(type, callback) {
-  var self = this;
-  self.send("ai/ref?type" + type, callback);
-}
-
-/***
+# Digitalポートに関する操作
 
 ## ポート値読み込み
 
@@ -305,15 +196,6 @@ arduinode.digitalRead(0, function(err, result){
 ```c
 digitalRead([port]);
 ```
-
-*/
-Arduinode.prototype.digitalRead = function(port, callback) {
-  var self = this;
-  self.send("di/read/" + port, callback);
-}
-
-
-/***
 
 ## ポート出力
 
@@ -364,16 +246,6 @@ arduinode.digitalWrite(0, 0,function(err, result){
 ```c
 digitalWrite([port], [val]);
 ```
-
-*/
-Arduinode.prototype.digitalWrite = function(port, val, callback) {
-  var self = this;
-  self.send("do/write/" + port + "?val=" + val, callback);
-}
-
-
-/***
-
 ## ピンモード変更
 
 指定したポートのピンモードを変更します。
@@ -427,29 +299,4 @@ arduinode.pinMode(0, "INPUT", function(err, result){
 pinMode([port], [type);
 ```
 
-*/
-Arduinode.prototype.pinMode = function(port, type, callback) {
-  var self = this;
-  self.send("d/mode/" + port + "?type=" + type, callback);
-}
 
-module.exports.Arduinode = Arduinode;
-
-/*
- * NOTE:
- *
- *
- * Arduinoのシリアルバッファが大きくないので、
- * 以下の様なコードを書くと直ぐにバッファが溢れて
- * 正常にコマンドが送信できなくなる.
- *
- *  arduinode.on("open", function(){
- *    for(var i = 0; i < 10; i++){
- *      arduinode.send("ai/read/" + i, function(err, resp){
- *        if(err) throw err;
- *        console.log(resp);
- *      });
- *    }
- *  });
- *
- */
