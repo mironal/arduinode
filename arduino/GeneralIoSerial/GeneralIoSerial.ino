@@ -91,8 +91,22 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      Close serial port.
      format => system/close
    */
-  {"system/close", &closeSerial}
+  {"system/close", &closeSerial},
+
+
+  /*
+    Reset arduino.
+    node-serialportではDTR信号の制御が出来ない(多分)ため
+    関数内でスタックオーバーフローを発生させることで強制的にリセットをかける。
+    リセットかけるとnode.jsが終了しない不具合を解決することが出来る。
+
+    format => system/reset
+   */
+  {"system/reset", &resetTask}
+
 };
+
+
 
 void setup() {
   memset(read_buf,0,128);
@@ -325,6 +339,13 @@ String switchTypeReturnJson(String msg, String refType){
 // シリアルを閉じる.
 String closeSerial(String empty){
   Serial.end();
+  return "";
+}
+
+
+// スタックオーバーフローにより強制的にリセット
+String resetTask(String empty){
+  resetTask("");
   return "";
 }
 
