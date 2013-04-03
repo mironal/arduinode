@@ -1,14 +1,19 @@
-# 各種操作
+# 目次
+* [Analogポートに関する操作](#analog)
+    * [AD値読み込み : analogRead](#analogRead)
+    * [アナログ値(PWM)出力 : analogWrite](#analogWrite)
+    * [Analog入力基準電圧変更 : analogReference](#analogReference)
+* [Digitalポートに関する操作](#digital)
+    * [ポート値読み込み : digitalRead](#digitalRead)
+    * [ポート出力 : digitalWrite](#digitalWrite)
+    * [ピンモード変更 : pinMode](#pinMode)
 
-* ポート番号などの変数は\[\]で囲む
-* 改行コードは必要ない(arduinode.jsが吸収する)
-* 現時点(2013/04/01)ではLow level APIのみ実装
+# Analogポートに関する操作 <a name="analog">
 
-# Analogポートに関する操作
 
-## AD値読み込み
+## AD値読み込み <a name="analogRead">
 
-指定したポート番号のAD値を読みます。
+指定したポートのAD値を読み込む。
 
 ### リクエスト(node.js -> Arduino)
 
@@ -36,14 +41,14 @@ ai/read/[port]
 ```js
 // High level API
 arduinode.analogRead(0, function(err, reuslt){
-    if(err) throw err;
-    console.log(result);
+if(err) throw err;
+console.log(result);
 });
 
 // Low level API
 arduinode.send("ai/read/0", function(err, result){
-    if(err) throw err;
-    console.log(result);
+if(err) throw err;
+console.log(result);
 });
 ```
 
@@ -53,7 +58,8 @@ arduinode.send("ai/read/0", function(err, result){
 analogRead([port]);
 ```
 
-## アナログ値(PWM)出力
+
+## アナログ値(PWM)出力 <a name="analogWrite">
 
 指定したポートからアナログ値を出力します。
 
@@ -98,7 +104,8 @@ arduinode.analogWrite(1, 100, function(err, result){
 analogWrite([port], [val]);
 ```
 
-## Analog入力基準電圧変更
+
+## Analog入力基準電圧変更 <a name="analogReference">
 
 AD値読み込みに使用される基準電圧源を変更します。
 
@@ -148,9 +155,11 @@ arduinode.analogReference("INTERNAL", function(err, result){
 analogReference([type]);
 ```
 
-# Digitalポートに関する操作
 
-## ポート値読み込み
+# Digitalポートに関する操作 <a name="digital">
+
+
+## ポート値読み込み <a name="digitalRead">
 
 指定したポートの値(0 or 1)を読み込みます。
 
@@ -197,7 +206,8 @@ arduinode.digitalRead(0, function(err, result){
 digitalRead([port]);
 ```
 
-## ポート出力
+
+## ポート出力 <a name="digitalWrite">
 
 指定したポートに値を書き込みます。
 
@@ -246,7 +256,9 @@ arduinode.digitalWrite(0, 0,function(err, result){
 ```c
 digitalWrite([port], [val]);
 ```
-## ピンモード変更
+
+
+## ピンモード変更 <a name="pinMode">
 
 指定したポートのピンモードを変更します。
 
@@ -298,5 +310,4 @@ arduinode.pinMode(0, "INPUT", function(err, result){
 ```c
 pinMode([port], [type);
 ```
-
 

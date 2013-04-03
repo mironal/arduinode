@@ -53,4 +53,4 @@ Arduinoからnode.jsへはJSONにparse可能な文字列で情報が送られる
 
 
 ## 具体的な通信方法
-[こちらです](CommandAndResponse.md)
+[こちらです](API.md)
