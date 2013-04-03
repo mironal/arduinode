@@ -18,7 +18,7 @@ function Arduinode(path, callback){
   self.callback = [];
   self.error = null;
 
-  self.on("ready", callback);
+  self.once("ready", callback);
 
   // arduinoは\r\nを返してくる.
   self.sp.on("data", function(data){
@@ -63,19 +63,9 @@ util.inherits(Arduinode, SerialPort);
  */
 Arduinode.prototype.send = function(cmd, callback) {
   var self = this;
-  var sendCmd = cmd.replace(/\n$/, "") + "\n";
-  if(sendCmd.length < 100){
+  if(cmd.length < 100){
     self.callback.push(callback);
-    self.sp.write(sendCmd, function(err, writeBytes){
-      if(err) throw err;
-
-      if(writeBytes != sendCmd.length){
-        var error = new Error();
-        error.name = "Send error.";
-        error.message = "Write bytes mismatch."
-        throw error;
-      }
-    });
+    self._write(cmd,null);
   }else{
     // Arduinoのバッファがあふれるようなサイズのコマンドは
     // 送信せずにエラーを発生させる。
@@ -86,6 +76,8 @@ Arduinode.prototype.send = function(cmd, callback) {
     callback(error, null);
   }
 }
+
+
 
 /*
  * High level API
@@ -444,6 +436,78 @@ pinMode([port], [type);
 Arduinode.prototype.pinMode = function(port, type, callback) {
   var self = this;
   self.send("d/mode/" + port + "?type=" + type, callback);
+}
+
+/***
+
+# Arduinoそのものに関する操作 <a name="system">
+
+*/
+
+/***
+
+## シリアル切断 <a name="close">
+
+Arduinoを強制的にリセットすることでシリアルポート接続を切断する。
+
+このAPIを使って切断してから出ないとnode.jsを終了できない。
+
+### リクエスト(node.js -> Arduino)
+
+```txt
+system/reset
+```
+
+### レスポンス(node.js <- Arduino)
+
+無し
+
+### Sample code
+
+```js
+arduinode.close(function(){
+    console.log("closed");
+});
+```
+
+### 対応するArduinoの操作
+
+無し.
+
+Arduino内でスタックオーバーフローを発生させることで強制的にリセットを行なっている。
+
+ArduinoはDTR信号を制御することでリセット可能だが、node-serialportでDTR信号を制御する方法が不明なので、現段階ではこの方法を取る。
+
+*/
+Arduinode.prototype.close = function(callback) {
+  var self = this;
+  var sendCmd = "system/reset\n";
+  self._write("system/reset", function(){
+    self.sp.close();
+    callback();
+  });
+}
+
+
+/*
+ * 非公開
+*/
+Arduinode.prototype._write = function(cmd, callback){
+  var self = this;
+  var sendCmd = cmd.replace(/\n$/, "") + "\n";
+  self.sp.write(sendCmd, function(err, writeBytes){
+    if(err) throw err;
+
+    if(writeBytes != sendCmd.length){
+      var error = new Error();
+      error.name = "Send error.";
+      error.message = "Write bytes mismatch."
+    throw error;
+    }
+    if(callback){
+      callback();
+    }
+  });
 }
 
 module.exports.Arduinode = Arduinode;
