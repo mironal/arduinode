@@ -11,49 +11,6 @@ var express = require('express')
   , path = require('path')
   , async = require('async');
 
-var init_arduino_tasks = [
-function(cb){ arduinode.send("d/mode/0?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/1?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/2?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/3?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/4?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/5?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/6?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/7?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/8?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/9?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/10?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/11?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/12?type=INPUT", cb);},
-function(cb){ arduinode.send("d/mode/13?type=INPUT", cb);}
-];
-
-var read_ai_tasks = [
-function(cb){ arduinode.send("ai/read/0", cb); },
-  function(cb){ arduinode.send("ai/read/1", cb); },
-  function(cb){ arduinode.send("ai/read/2", cb); },
-  function(cb){ arduinode.send("ai/read/3", cb); },
-  function(cb){ arduinode.send("ai/read/4", cb); },
-  function(cb){ arduinode.send("ai/read/5", cb); }
-];
-
-var read_di_tasks = [
-  function(cb){ arduinode.send("di/read/0", cb); },
-  function(cb){ arduinode.send("di/read/1", cb); },
-  function(cb){ arduinode.send("di/read/2", cb); },
-  function(cb){ arduinode.send("di/read/3", cb); },
-  function(cb){ arduinode.send("di/read/4", cb); },
-  function(cb){ arduinode.send("di/read/5", cb); },
-  function(cb){ arduinode.send("di/read/6", cb); },
-  function(cb){ arduinode.send("di/read/7", cb); },
-  function(cb){ arduinode.send("di/read/8", cb); },
-  function(cb){ arduinode.send("di/read/9", cb); },
-  function(cb){ arduinode.send("di/read/10", cb); },
-  function(cb){ arduinode.send("di/read/11", cb); },
-  function(cb){ arduinode.send("di/read/12", cb); },
-  function(cb){ arduinode.send("di/read/13", cb); }
-];
-
 
 var app = express();
 
@@ -123,4 +80,47 @@ var arduinode = new Arduinode(portName, function(){
 
 });
 
+
+var init_arduino_tasks = [
+  function(cb){ arduinode.pinMode(0, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(1, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(2, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(3, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(4, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(5, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(6, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(7, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(8, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(9, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(10, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(11, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(12, "INPUT", cb);},
+  function(cb){ arduinode.pinMode(13, "INPUT", cb);}
+];
+
+var read_ai_tasks = [
+  function(cb){ arduinode.analogRead(0, cb); },
+  function(cb){ arduinode.analogRead(1, cb); },
+  function(cb){ arduinode.analogRead(2, cb); },
+  function(cb){ arduinode.analogRead(3, cb); },
+  function(cb){ arduinode.analogRead(4, cb); },
+  function(cb){ arduinode.analogRead(5, cb); }
+];
+
+var read_di_tasks = [
+  function(cb){ arduinode.digitalRead(0, cb); },
+  function(cb){ arduinode.digitalRead(1, cb); },
+  function(cb){ arduinode.digitalRead(2, cb); },
+  function(cb){ arduinode.digitalRead(3, cb); },
+  function(cb){ arduinode.digitalRead(4, cb); },
+  function(cb){ arduinode.digitalRead(5, cb); },
+  function(cb){ arduinode.digitalRead(6, cb); },
+  function(cb){ arduinode.digitalRead(7, cb); },
+  function(cb){ arduinode.digitalRead(8, cb); },
+  function(cb){ arduinode.digitalRead(9, cb); },
+  function(cb){ arduinode.digitalRead(10, cb); },
+  function(cb){ arduinode.digitalRead(11, cb); },
+  function(cb){ arduinode.digitalRead(12, cb); },
+  function(cb){ arduinode.digitalRead(13, cb); }
+];
 
