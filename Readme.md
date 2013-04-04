@@ -203,8 +203,6 @@ They will be able to solve all the problems mentioned above.
 
 # TODO
 
-* 使用方法の整備
-* node.js側の整備 & モジュール化 (現在はテストコードしか無い)
 * Arduino側の機能追加
 
 # Sorry
