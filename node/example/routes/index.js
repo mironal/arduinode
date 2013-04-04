@@ -4,5 +4,5 @@
  */
 
 exports.index = function(req, res){
-  res.render('index', { title: 'Arduinode with web socekt' });
+  res.render('index', { title: 'Arduinode with WebSocket' });
 };
