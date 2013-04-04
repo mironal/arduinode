@@ -769,7 +769,8 @@ describe("Arduinode low level API test", function(){
   });
 
   after(function(done){
-    arduinode.close();
-    done();
+    arduinode.close(function(){
+      done();
+    });
   });
 });

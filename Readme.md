@@ -4,22 +4,9 @@ node.jsからArduinoを操作するニクい奴。
 
 Nice guy that you can manipulate the Arduino from node.js.
 
+Arduinoのプログラミングを不要にし、node.jsだけでアプリケーションが作れます。
 
-# このプロジェクトの成果物
-
-## GeneralIoSerial.ino
-
-* Arduinoのプログラム
-* シリアルポート経由で様々な操作が可能
-* arduinodeに最適化済み
-* 現在はArduino UNOでのみ動作確認済
-
-## arduinode
-
-* node.jsのモジュール
-* GeneralIoSerial.inoとの通信を簡潔かつ、node.jsライクに記述可能
-* [node-serialport](https://github.com/voodootikigod/node-serialport)モジュールのラッパー.
-* npmリポジトリに登録済
+No programming of Arduino. application can make only node.js.
 
 
 # 使い方
@@ -36,29 +23,26 @@ git clone https://github.com/mironal/Node-Arduino-General-IO.git
 
 ### コンパイル & 書き込み
 
-"Node-Arduino-General-IO/arduino/GeneralIoSerial"の中にある"GeneralIoSerial.ino"をarduinoの開発環境で開き、コンパイルしてarduinoに書き込む.
+"Node-Arduino-General-IO/arduino/GeneralIoSerial"の中にある"GeneralIoSerial.ino"をArduinoの開発環境で開き、Arduinoに書き込む.
+
+これだけです。
 
 
 ## arduinode
 
 npm(node package manager)を使って簡単にインストール出来ます。
 
-開発に使うディレクトリを作成.
-Create development directory.
-
-```sh
-mkdir dev_dir
-cd dev_dir
-```
-
 arduinodeのインストール。
+
 Install arduinode module.
 
 ```sh
 npm install arduinode
 ```
 
-### example code
+
+
+### Example code
 
 ```js
 var Arduinode = require("arduinode").Arduinode;
@@ -67,11 +51,16 @@ var portName = "/dev/tty.usbmodem1411";
 
 arduinode = new Arduinode(portName, function(){
     console.log("open");
-    var value = arduinode.analogRead(0);
+    arduinode.analogRead(0, function(err, result){
+      console.log(result);
+    });
 });
 
 ```
 
+### Example application
+
+[Come here!](node/example/Readme.md)
 
 
 # どのように操作が出来るのか？
@@ -214,8 +203,6 @@ They will be able to solve all the problems mentioned above.
 
 # TODO
 
-* 使用方法の整備
-* node.js側の整備 & モジュール化 (現在はテストコードしか無い)
 * Arduino側の機能追加
 
 # Sorry

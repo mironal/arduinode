@@ -7,6 +7,8 @@
     * [ポート値読み込み : digitalRead](#digitalRead)
     * [ポート出力 : digitalWrite](#digitalWrite)
     * [ピンモード変更 : pinMode](#pinMode)
+* [Arduinoそのものに関する操作](#system)
+    * [シリアル切断 : close](#close)
 
 # Analogポートに関する操作 <a name="analog">
 
@@ -310,4 +312,40 @@ arduinode.pinMode(0, "INPUT", function(err, result){
 ```c
 pinMode([port], [type);
 ```
+
+
+# Arduinoそのものに関する操作 <a name="system">
+
+
+## シリアル切断 <a name="close">
+
+Arduinoを強制的にリセットすることでシリアルポート接続を切断する。
+
+このAPIを使って切断してから出ないとnode.jsを終了できない。
+
+### リクエスト(node.js -> Arduino)
+
+```txt
+system/reset
+```
+
+### レスポンス(node.js <- Arduino)
+
+無し
+
+### Sample code
+
+```js
+arduinode.close(function(){
+    console.log("closed");
+});
+```
+
+### 対応するArduinoの操作
+
+無し.
+
+Arduino内でスタックオーバーフローを発生させることで強制的にリセットを行なっている。
+
+ArduinoはDTR信号を制御することでリセット可能だが、node-serialportでDTR信号を制御する方法が不明なので、現段階ではこの方法を取る。
 
