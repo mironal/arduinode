@@ -257,18 +257,6 @@ String eventResponseHeader(String event){
   return "{" + stringJson("event", event) + "," + wrapDq("datas") + ":[";
 }
 
-String boolJson(String key, bool value){
-  String str = value ? "true" : "false";
-  return wrapDq(key) + ":" + str;
-}
-
-String intJson(String key, int value){
-  return wrapDq(key) + ":" + String(value);
-}
-
-String stringJson(String key, String value){
-  return wrapDq(key) + ":" + wrapDq(value);
-}
 
 String task(String msg){
   // 関数テーブルからタスクを決定する.
@@ -380,7 +368,7 @@ String aoWriteTask(String portWithValue){
   }
 
   analogWrite(port, val);
-  return ioReturnJson("OK", port, val);
+  return okIoJson("OK", port, val);
 }
 
 
@@ -399,7 +387,7 @@ String doWriteTask(String portWithValue){
     digitalWrite(port, LOW);
     val = 0;
   }
-  return ioReturnJson("OK", port, val);
+  return okIoJson("OK", port, val);
 }
 
 
@@ -421,7 +409,7 @@ String diReadTask(String portQuery){
 
 String diRead(uint8_t port){
   int val = digitalRead(port);
-  return ioReturnJson("OK", port, val);
+  return okIoJson("OK", port, val);
 }
 
 /*
@@ -438,15 +426,9 @@ String aiReadTask(String portQuery){
 
 String aiRead(uint8_t port){
   int val = analogRead(port);
-  return ioReturnJson("OK", port, val);
+  return okIoJson("OK", port, val);
 }
 
-String ioReturnJson(String msg, int port, int val){
-  String body = wrapDq("msg") + ":"+wrapDq(msg)
-    + "," + wrapDq("port") + ":" + String(port)
-    + "," + wrapDq("val") + ":" + String(val);
-  return wraped('{', body, '}');
-}
 
 
 /*
@@ -469,11 +451,6 @@ String aiRefSwitchTask(String ref){
   return NgReturnJson("Illegal type.", ref);
 }
 
-String switchTypeReturnJson(String msg, String refType){
-  String body = wrapDq("msg") + ":" + wrapDq(msg)
-    + "," + wrapDq("type") + ":" + wrapDq(refType);
-  return wraped('{', body, '}');
-}
 
 String streamDiOnTask(String query){
 
@@ -516,14 +493,6 @@ String streamAiOffTask(String empty){
   return okStreamJson(ai_stream_info.enabled, ai_stream_info.ports);
 }
 
-// portsはDI_STREAM_INFOのportsに合わせてuint64_tにしている
-String okStreamJson(bool enabled, uint64_t ports){
-  String body = stringJson("msg", "OK")
-    + "," + boolJson("enabled", enabled)
-    + "," + intJson("ports", ports);
-  return wraped('{', body, '}');
-
-}
 
 // シリアルを閉じる.
 String closeSerial(String empty){
@@ -542,22 +511,7 @@ String resetTask(String empty){
    Utility functions.
  */
 
-String NgReturnJson(String err, String hint){
-  String body = wrapDq("msg") + ":" + wrapDq("NG") + "," + wrapDq("error") + ":" + wrapDq(err) + "," + wrapDq("hint") + ":" + wrapDq(hint);
-  return wraped('{', body, '}');
-}
 
-String wrapDq(String str){
-  return wrapChar(str, '"');
-}
-
-String wrapChar(String str, char wrap){
-  return wraped(wrap, str, wrap);
-}
-
-String wraped(char before, String body, char after){
-  return before + body + after;
-}
 
 boolean isInt(String str){
   for(int i = 0; i < str.length(); i++){
@@ -628,4 +582,76 @@ int intPow(int base, int e){
     rslt *= base;
   }
   return rslt;
+}
+
+/*
+   JSON変換関連
+ */
+
+// portsはDI_STREAM_INFOのportsに合わせてuint64_tにしている
+String okStreamJson(bool enabled, uint64_t ports){
+  String body = stringJson("msg", "OK") + ","
+    + boolJson("enabled", enabled) + ","
+    + intJson("ports", ports);
+
+  return wrapBrace(body);
+}
+
+
+String okIoJson(String msg, int port, int val){
+  String body = stringJson("msg", msg) + ","
+    + intJson("port", port) + ","
+    + intJson("val", val);
+
+  return wrapBrace(body);
+}
+
+
+String switchTypeReturnJson(String msg, String refType){
+  String body = stringJson("msg", msg) + ","
+    + stringJson("type", refType);
+
+  return wrapBrace(body);
+}
+
+
+String NgReturnJson(String err, String hint){
+  String body = stringJson("msg", "NG") + ","
+    + stringJson("error", err) + ""
+    + stringJson("hint", hint);
+
+  return wrapBrace(body);
+}
+
+String boolJson(String key, bool value){
+  String str = value ? "true" : "false";
+  return wrapDq(key) + ":" + str;
+}
+
+String intJson(String key, int value){
+  return wrapDq(key) + ":" + String(value);
+}
+
+String stringJson(String key, String value){
+  return wrapDq(key) + ":" + wrapDq(value);
+}
+
+/*
+   文字列を囲んだりする奴
+ */
+
+String wrapBrace(String str){
+  return wraped('{', str, '}');
+}
+
+String wrapDq(String str){
+  return wrapChar(str, '"');
+}
+
+String wrapChar(String str, char wrap){
+  return wraped(wrap, str, wrap);
+}
+
+String wraped(char before, String body, char after){
+  return before + body + after;
 }
