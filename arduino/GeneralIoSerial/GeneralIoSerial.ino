@@ -1,4 +1,17 @@
+#include <avr/pgmspace.h>
+
 #define ARRAYSIZE(array) (sizeof(array) / sizeof(array[0]))
+
+const prog_char ILLEGAL_COMMAND[] PROGMEM       = "Illegal command.";
+const prog_char ILLEGAL_TYPE[] PROGMEM          = "Illegal type.";
+const prog_char ILLEGAL_QUERY[] PROGMEM         = "Illegal query.";
+const prog_char ILLEGAL_VALUE[] PROGMEM         = "Illegal value.";
+const prog_char ILLEGAL_PORT_NUMBER[] PROGMEM   = "Illegal port number.";
+const prog_char QUERY_NOT_FOUND[] PROGMEM       = "Query not found.";
+const prog_char TYPE_IS_NOT_SPECIFIED[] PROGMEM = "type is not specified.";
+const prog_char VAL_IS_NOT_SPECIFIED[] PROGMEM  = "val is not specified.";
+const prog_char COMMAND_IS_TOO_LONG[] PROGMEM   = "Command is too long.";
+
 
 char read_buf[128];
 int buf_index = 0;
@@ -207,7 +220,8 @@ void loop() {
         break;
       }
       if(++buf_index >= ARRAYSIZE(read_buf)){
-        Serial.println(NgReturnJson("Command is too long.", "Less than 127 characters, including newlines" ));
+        Serial.println(NgReturnJson(COMMAND_IS_TOO_LONG,
+              "Less than 127 characters, including newlines" ));
         // なくなるまで読み捨てる.
         while(Serial.available() > 0){Serial.read();}
         memset(read_buf, 0, ARRAYSIZE(read_buf));
@@ -268,7 +282,7 @@ String task(String msg){
     }
   }
   // TODO JSONでエスケープするべき文字が入っていると受信した側でヤバイ気がする.
-  return NgReturnJson("Illegal command.", msg);
+  return NgReturnJson(ILLEGAL_COMMAND, msg);
 }
 
 String switchPinModeTask(String portWithQuery){
@@ -285,7 +299,7 @@ String switchPinModeTask(String portWithQuery){
   if(valQuery.startsWith("type=")){
     valQuery.replace("type=", "");
   }else{
-    return NgReturnJson("type is not specified.", valQuery);
+    return NgReturnJson(TYPE_IS_NOT_SPECIFIED, valQuery);
   }
 
   for(int i = 0; i < ARRAYSIZE(PIN_MODE_TBL); i++){
@@ -294,14 +308,14 @@ String switchPinModeTask(String portWithQuery){
       return switchTypeReturnJson("OK", valQuery);
     }
   }
-  return NgReturnJson("Illegal type.", valQuery);
+  return NgReturnJson(ILLEGAL_TYPE, valQuery);
 }
 
 String checkHasQuery(String query, int *at){
   *at = query.indexOf('?');
   if(*at == -1){
     // queryが指定されていなかったら-1で返す.
-    return NgReturnJson("Query not found.", query);
+    return NgReturnJson(QUERY_NOT_FOUND, query);
   }
   return NULL;
 }
@@ -316,7 +330,7 @@ String checkPortWithQuery(String portWithQuery, int *port, String *query){
 
   String portQuery = portWithQuery.substring(0, at);
   if(!isInt(portQuery)){
-    return NgReturnJson("Illegal port number.", portQuery);
+    return NgReturnJson(ILLEGAL_PORT_NUMBER, portQuery);
   }
   *port = strToInt(portQuery);
   *query = portWithQuery.substring(at + 1);
@@ -337,7 +351,7 @@ String checkPortWithValue(String portWithValue, int *port, int *val){
   if(valQuery.startsWith("val=")){
     valQuery.replace("val=","");
   }else{
-    return NgReturnJson("val is not specified.", valQuery);
+    return NgReturnJson(VAL_IS_NOT_SPECIFIED, valQuery);
   }
 
   // HIGH, LOWのチェックはdoWriteTask用
@@ -348,7 +362,7 @@ String checkPortWithValue(String portWithValue, int *port, int *val){
   }else if(isInt(valQuery)){
     *val = strToInt(valQuery);
   }else{
-    return NgReturnJson("Illegal value.", valQuery);
+    return NgReturnJson(ILLEGAL_VALUE, valQuery);
   }
 
   return NULL;
@@ -393,7 +407,7 @@ String doWriteTask(String portWithValue){
 
 String checkPortQuery(String portQuery){
   if(!isInt(portQuery)){
-    return NgReturnJson("Illegal port number.", portQuery);
+    return NgReturnJson(ILLEGAL_PORT_NUMBER, portQuery);
   }
   return NULL;
 }
@@ -420,7 +434,7 @@ String aiReadTask(String portQuery){
   if(error){
     return error;
   }
-  int port = strToInt(portQuery);
+  uint8_t port = strToInt(portQuery);
   return aiRead(port);
 }
 
@@ -448,7 +462,7 @@ String aiRefSwitchTask(String ref){
     }
   }
   ref.replace("?type=", "");
-  return NgReturnJson("Illegal type.", ref);
+  return NgReturnJson(ILLEGAL_TYPE, ref);
 }
 
 
@@ -458,7 +472,7 @@ String streamDiOnTask(String query){
   if(at >= 0){
     String portsQuery = query.substring(at + 1);
     if(!isInt(portsQuery)){
-      return NgReturnJson("Illegal query.", query);
+      return NgReturnJson(ILLEGAL_QUERY, query);
     }
     di_stream_info.ports = strToUInt64(portsQuery);
   }
@@ -478,7 +492,7 @@ String streamAiOnTask(String query){
   if(at >= 0){
     String portsQuery = query.substring(at + 1);
     if(!isInt(portsQuery)){
-      return NgReturnJson("Illegal query.", query);
+      return NgReturnJson(ILLEGAL_QUERY, query);
     }
     ai_stream_info.ports = strToUInt64(portsQuery);
   }
@@ -615,9 +629,11 @@ String switchTypeReturnJson(String msg, String refType){
 }
 
 
-String NgReturnJson(String err, String hint){
+String NgReturnJson(const prog_char *err, String hint){
+  char buf[60] = {0};
+  strcpy_P(buf, err);
   String body = stringJson("msg", "NG") + ","
-    + stringJson("error", err) + ""
+    + stringJson("error", buf) + ","
     + stringJson("hint", hint);
 
   return wrapBrace(body);
