@@ -18,6 +18,25 @@ struct STR_UINT8_PEAR {
   uint8_t value;
 };
 
+// DI Stream機能の情報.
+struct DI_STREAM_INFO {
+  // 読み込みを行うポート情報
+  uint64_t ports;
+
+  // Stream機能が有効かどうか
+  bool enabled;
+} di_stream_info;
+
+struct AI_STREAM_INFO {
+  // 読み込みを行うポート情報
+  uint16_t ports;
+
+  // Stream機能が有効かどうか
+  bool enabled;
+} ai_stream_info;
+
+
+
 // pinModeの名前と値を保持するテーブル.
 const struct STR_UINT8_PEAR PIN_MODE_TBL[] = {
   {"INPUT", INPUT},
@@ -82,12 +101,63 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      Swith digital pin mode.
      format  => d/mode/{port}?type={type}
      {port}  => port number.
-     {type}   => INPUT | OUTPUT | INPUT_PULLUP
+     {type}  => INPUT | OUTPUT | INPUT_PULLUP
      example => d/mode/3?type=INPUT
    */
   {"d/mode/", &switchPinModeTask},
 
   /*
+    DI連続転送ON
+    format   => stream/di/on?{ports}
+    {ports}  => 有効にするポート.対応するbitを1にする. 指定しない場合は前回と同じポートを使う.Defaultは0
+    example  => stream/di/on?240
+     240 = 0xf0 = 7 - 4番ポートを有効化
+
+
+     streamのレスポンス
+
+     streamのレスポンスはeventとして定義する
+
+     {"event":"di", "datas":[
+        {"msg":"OK","port":[port],"val":[val]},
+        {"msg":"OK","port":[port],"val":[val]},
+        ...
+        {"msg":"OK","port":[port],"val":[val]}
+     ]}
+   */
+  {"stream/di/on", &streamDiOnTask},
+
+  /*
+     DI連続転送OFF
+     format => stream/di/off
+   */
+  {"stream/di/off", &streamDiOffTask},
+
+  /*
+    AI連続転送ON
+    format   => stream/ai/on?{ports}
+    {ports}  => 有効にするポート.対応するbitを1にする. 指定しない場合は前回と同じポートを使う.Defaultは0
+    example  => stream/ai/on?15
+     15 = 0xf = 3 - 0番ポートを有効化
+   */
+  {"stream/ai/on", &streamAiOnTask},
+
+  /*
+     AI連続転送OFF
+     format => stream/ai/off
+   */
+  {"stream/ai/off", &streamAiOffTask},
+
+
+  /*
+    連続転送間隔設定
+    format => stream/delay?{delayMillSec}
+    {delayMillSec} => 変換間隔[msec]
+   */
+  //{"stream/delay", &setStreamDelayTask},
+
+  /*
+TODO: 紛らわしいので後で消す
      Close serial port.
      format => system/close
    */
@@ -108,13 +178,23 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
 
 
 
+
 void setup() {
+  buf_index = 0;
   memset(read_buf,0,128);
+
+  di_stream_info.ports = 0;
+  di_stream_info.enabled = false;
+
+  ai_stream_info.ports = 0;
+  ai_stream_info.enabled = false;
+
   Serial.begin(115200);
   Serial.println("READY");
 }
 
 void loop() {
+
   if(Serial.available() > 0){
     while(Serial.available() > 0){
       read_buf[buf_index] = Serial.read();
@@ -135,8 +215,60 @@ void loop() {
       }
     }
   }
+
+  // enabledがtrueかつ、portsのどれか一つが有効になっていれば
+  // 変換を行う
+  if(di_stream_info.enabled &&
+     di_stream_info.ports != 0){
+    Serial.print(eventResponseHeader("di"));
+    bool first = true;
+    for(int i = 0; i < 14; i++){
+      if(bitRead(di_stream_info.ports, i) == 1){
+        if(first){
+          first = false;
+        }else{
+          Serial.print(",");
+        }
+        Serial.print(diRead(i));
+      }
+    }
+    Serial.println("]}");
+  }
+
+  if(ai_stream_info.enabled &&
+     ai_stream_info.ports != 0){
+    Serial.print(eventResponseHeader("ai"));
+    bool first = true;
+    for(int i = 0; i < 14; i++){
+      if(bitRead(ai_stream_info.ports, i) == 1){
+        if(first){
+          first = false;
+        }else{
+          Serial.print(",");
+        }
+        Serial.print(aiRead(i));
+      }
+    }
+    Serial.println("]}");
+  }
 }
 
+String eventResponseHeader(String event){
+  return "{" + stringJson("event", event) + "," + wrapDq("datas") + ":[";
+}
+
+String boolJson(String key, bool value){
+  String str = value ? "true" : "false";
+  return wrapDq(key) + ":" + str;
+}
+
+String intJson(String key, int value){
+  return wrapDq(key) + ":" + String(value);
+}
+
+String stringJson(String key, String value){
+  return wrapDq(key) + ":" + wrapDq(value);
+}
 
 String task(String msg){
   // 関数テーブルからタスクを決定する.
@@ -283,7 +415,11 @@ String diReadTask(String portQuery){
   if(error){
     return error;
   }
-  int port = strToInt(portQuery);
+  uint8_t port = strToInt(portQuery);
+  return diRead(port);
+}
+
+String diRead(uint8_t port){
   int val = digitalRead(port);
   return ioReturnJson("OK", port, val);
 }
@@ -297,6 +433,10 @@ String aiReadTask(String portQuery){
     return error;
   }
   int port = strToInt(portQuery);
+  return aiRead(port);
+}
+
+String aiRead(uint8_t port){
   int val = analogRead(port);
   return ioReturnJson("OK", port, val);
 }
@@ -335,6 +475,55 @@ String switchTypeReturnJson(String msg, String refType){
   return wraped('{', body, '}');
 }
 
+String streamDiOnTask(String query){
+
+  int at = query.indexOf('?');
+  if(at >= 0){
+    String portsQuery = query.substring(at + 1);
+    if(!isInt(portsQuery)){
+      return NgReturnJson("Illegal query.", query);
+    }
+    di_stream_info.ports = strToUInt64(portsQuery);
+  }
+  // queryがない場合はportsを変更せずにstreamをenableにする.
+  di_stream_info.enabled = true;
+
+  return okStreamJson(di_stream_info.enabled, di_stream_info.ports);
+}
+
+String streamDiOffTask(String empty){
+  di_stream_info.enabled = false;
+  return okStreamJson(di_stream_info.enabled, di_stream_info.ports);
+}
+
+String streamAiOnTask(String query){
+  int at = query.indexOf('?');
+  if(at >= 0){
+    String portsQuery = query.substring(at + 1);
+    if(!isInt(portsQuery)){
+      return NgReturnJson("Illegal query.", query);
+    }
+    ai_stream_info.ports = strToUInt64(portsQuery);
+  }
+  // queryがない場合はportsを変更せずにstreamをenableにする.
+  ai_stream_info.enabled = true;
+
+  return okStreamJson(ai_stream_info.enabled, ai_stream_info.ports);
+}
+
+String streamAiOffTask(String empty){
+  ai_stream_info.enabled = false;
+  return okStreamJson(ai_stream_info.enabled, ai_stream_info.ports);
+}
+
+// portsはDI_STREAM_INFOのportsに合わせてuint64_tにしている
+String okStreamJson(bool enabled, uint64_t ports){
+  String body = stringJson("msg", "OK")
+    + "," + boolJson("enabled", enabled)
+    + "," + intJson("ports", ports);
+  return wraped('{', body, '}');
+
+}
 
 // シリアルを閉じる.
 String closeSerial(String empty){
@@ -397,6 +586,28 @@ int strToInt(String str){
   }
 
   int rslt = 0;
+  if(b_i > 0){
+    for(int i = 0; i < b_i; i++){
+      rslt += (int)(buf[i] - '0') * intPow(10, (b_i - 1) - i);
+    }
+  }
+  return rslt;
+}
+
+uint64_t strToUInt64(String str){
+  char buf[128] = {0};
+  int b_i = 0;
+  /// 123という並びで来たら、321という並びでbufに格納される
+  for(int i = 0; i < str.length(); i++){
+    char c = str[i];
+    if( (c >= '0') && (c <= '9') ){
+      buf[b_i++] = c;
+    }else{
+      break;
+    }
+  }
+
+  uint64_t rslt = 0;
   if(b_i > 0){
     for(int i = 0; i < b_i; i++){
       rslt += (int)(buf[i] - '0') * intPow(10, (b_i - 1) - i);
