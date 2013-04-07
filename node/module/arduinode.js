@@ -33,18 +33,23 @@ function Arduinode(path, callback){
         if(received === "READY"){
           self.emit("ready");
         }else{
-          var cb = self.callback.shift();
-          if(typeof(cb) == "function"){
-            var result = JSON.parse(received);
-            if(result.msg == "NG"){
-              var error = new Error();
-              error.name = "Command error.";
-              error.message = result.error;
-              cb(error, result);
-            }else{
-              cb(self.error, JSON.parse(received));
+          var result = JSON.parse(received);
+          // eventってデータが含まれてたらemit
+          if(result.event){
+            self.emit("event", result);
+          }else{
+            var cb = self.callback.shift();
+            if(typeof(cb) == "function"){
+              if(result.msg == "NG"){
+                var error = new Error();
+                error.name = "Command error.";
+                error.message = result.error;
+                cb(error, result);
+              }else{
+                cb(self.error, JSON.parse(received));
+              }
+              self.errro = null;
             }
-            self.errro = null;
           }
         }
         self.buf = [];
