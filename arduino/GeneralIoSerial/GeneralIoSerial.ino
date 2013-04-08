@@ -2,39 +2,9 @@
 
 #define ARRAYSIZE(array) (sizeof(array) / sizeof(array[0]))
 
-
-// ポート数の違いを吸収したりするｱﾚ
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644P__)
-// Arduino MEGAとか
-
-// A0 - A15
-#define AI_MAX_PORT_NUM 16
-
-// D0 - D49
-#define DI_MAX_PORT_NUM 50
-#else
-// Unoとか
-
-// A0 - A5
-#define AI_MAX_PORT_NUM 6
-
-// D0 - D13
-#define DI_MAX_PORT_NUM 14
-#endif
-
-const prog_char ILLEGAL_COMMAND[] PROGMEM       = "Illegal command.";
-const prog_char ILLEGAL_TYPE[] PROGMEM          = "Illegal type.";
-const prog_char ILLEGAL_QUERY[] PROGMEM         = "Illegal query.";
-const prog_char ILLEGAL_VALUE[] PROGMEM         = "Illegal value.";
-const prog_char ILLEGAL_PORT_NUMBER[] PROGMEM   = "Illegal port number.";
-const prog_char QUERY_NOT_FOUND[] PROGMEM       = "Query not found.";
-const prog_char TYPE_IS_NOT_SPECIFIED[] PROGMEM = "type is not specified.";
-const prog_char VAL_IS_NOT_SPECIFIED[] PROGMEM  = "val is not specified.";
-const prog_char COMMAND_IS_TOO_LONG[] PROGMEM   = "Command is too long.";
-
-
-char read_buf[128];
-int buf_index = 0;
+/**************************************************************************
+                                型宣言
+**************************************************************************/
 
 // 各々のコマンドに対して処理を行う関数の型
 typedef String (*TASK_FUNC_PTR)(String str);
@@ -51,6 +21,61 @@ struct STR_UINT8_PEAR {
   uint8_t value;
 };
 
+/**************************************************************************
+                       ボード毎の違いを吸収するｱﾚ
+**************************************************************************/
+
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644P__)
+/*******************
+  Arduino MEGAとか
+*******************/
+
+// A0 - A15
+#define AI_MAX_PORT_NUM 16
+
+// D0 - D49
+#define DI_MAX_PORT_NUM 50
+
+// AI Reference電圧の名前と値を保持するテーブル.
+const struct STR_UINT8_PEAR AI_REF_TBL[] = {
+  {"DEFAULT", DEFAULT},
+  {"INTERNAL1V1", INTERNAL1V1},
+  {"INTERNAL2V56", INTERNAL2V56},
+  {"EXTERNAL", EXTERNAL}
+};
+#else
+/*******************
+  Arduino Unoとか
+*******************/
+
+// A0 - A5
+#define AI_MAX_PORT_NUM 6
+
+// D0 - D13
+#define DI_MAX_PORT_NUM 14
+
+
+// AI Reference電圧の名前と値を保持するテーブル.
+const struct STR_UINT8_PEAR AI_REF_TBL[] = {
+  {"DEFAULT", DEFAULT},
+  {"INTERNAL", INTERNAL},
+  {"EXTERNAL", EXTERNAL}
+};
+#endif
+
+const prog_char ILLEGAL_COMMAND[] PROGMEM       = "Illegal command.";
+const prog_char ILLEGAL_TYPE[] PROGMEM          = "Illegal type.";
+const prog_char ILLEGAL_QUERY[] PROGMEM         = "Illegal query.";
+const prog_char ILLEGAL_VALUE[] PROGMEM         = "Illegal value.";
+const prog_char ILLEGAL_PORT_NUMBER[] PROGMEM   = "Illegal port number.";
+const prog_char QUERY_NOT_FOUND[] PROGMEM       = "Query not found.";
+const prog_char TYPE_IS_NOT_SPECIFIED[] PROGMEM = "type is not specified.";
+const prog_char VAL_IS_NOT_SPECIFIED[] PROGMEM  = "val is not specified.";
+const prog_char COMMAND_IS_TOO_LONG[] PROGMEM   = "Command is too long.";
+
+
+char read_buf[128];
+int buf_index = 0;
 
 // DI連続転送の有効・無効を管理する. bitが立っていると有効.
 // megaのポート数に対応するため64bitにする.
@@ -66,12 +91,6 @@ const struct STR_UINT8_PEAR PIN_MODE_TBL[] = {
   {"INPUT_PULLUP", INPUT_PULLUP}
 };
 
-// AI Reference電圧の名前と値を保持するテーブル.
-const struct STR_UINT8_PEAR AI_REF_TBL[] = {
-  {"DEFAULT", DEFAULT},
-  {"INTERNAL", INTERNAL},
-  {"EXTERNAL", EXTERNAL}
-};
 
 // prefixとタスク関数のテーブルを使ってキメる.
 const struct TASK_FUNC TASK_FUNC_TBL[] = {
