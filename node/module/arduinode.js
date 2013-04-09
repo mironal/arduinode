@@ -94,10 +94,10 @@ Arduinode.prototype.send = function(cmd, callback) {
 1. 実験的
 :実験的なAPIです。将来大きく仕様が変更される可能性があります
 
-2. 不安定
+2. 安定
 :まだ十分にテストされていません。しかし、大きな仕様変更はありません。
 
-3. 安定
+3.固定
 :十分にテストされた安定したAPIです。仕様が変更されることはまずありません。
 
 */
@@ -118,6 +118,28 @@ Arduinode.prototype.send = function(cmd, callback) {
 ## AD値読み込み <a name="analogRead">
 
 指定したポートのAD値を読み込む。
+
+### API
+
+```js
+analogRead(port, callback);
+```
+
+### Sample code
+
+```js
+var port = 0;
+arduinode.analogRead(port, function(err, reuslt){
+  if(err) throw err;
+  console.log(result);
+});
+```
+
+### 対応するArduinoの操作
+
+```c
+analogRead(port);
+```
 
 ### リクエスト(node.js -> Arduino)
 
@@ -140,27 +162,9 @@ ai/read/[port]
 [val]
 :読み取られたAD値
 
-### Sample code
+### 安定度
 
-```js
-// High level API
-arduinode.analogRead(0, function(err, reuslt){
-if(err) throw err;
-console.log(result);
-});
-
-// Low level API
-arduinode.send("ai/read/0", function(err, result){
-if(err) throw err;
-console.log(result);
-});
-```
-
-### 対応するArduinoの操作
-
-```c
-analogRead([port]);
-```
+安定
 
 */
 Arduinode.prototype.analogRead = function(port, callback) {
@@ -173,6 +177,28 @@ Arduinode.prototype.analogRead = function(port, callback) {
 ## アナログ値(PWM)出力 <a name="analogWrite">
 
 指定したポートからアナログ値を出力します。
+
+### API
+
+```js
+analogWrite(port, value, callback);
+```
+
+### Sample code
+
+```js
+var port = 1;
+var value = 100;
+arduinode.analogWrite(port, value, function(err, result){
+  if(err) throw err;
+  console.log(result);
+});
+```
+### 対応するArduinoの操作
+
+```c
+analogWrite([port], [val]);
+```
 
 ### リクエスト(node.js -> Arduino)
 
@@ -193,27 +219,9 @@ ao/write/[port]?val=[val]
 {"msg":"OK","port":[port],"val":[val]}
 ```
 
-### Sample code
+### 安定度
 
-```js
-// Low level API
-arduinode.send("ao/write/0?val=25", function(err, result){
-    if(err) throw err;
-    console.log(result);
-});
-
-// High level API
-arduinode.analogWrite(1, 100, function(err, result){
-    if(err) throw err;
-    console.log(result);
-});
-```
-
-### 対応するArduinoの操作
-
-```c
-analogWrite([port], [val]);
-```
+安定
 
 */
 Arduinode.prototype.analogWrite = function(port, val, callback) {
@@ -226,6 +234,27 @@ Arduinode.prototype.analogWrite = function(port, val, callback) {
 ## Analog入力基準電圧変更 <a name="analogReference">
 
 AD値読み込みに使用される基準電圧源を変更します。
+
+# API
+```js
+analogReference(type, callback);
+```
+
+### Sample code
+
+```js
+var type = "INTERNAL"; // "INTERNAL" or "EXTERNAL" or "DEFAULT"
+arduinode.analogReference(type, function(err, result){
+  if(err) throw err;
+  console.log(result);
+});
+```
+
+### 対応するArduinoの操作
+
+```
+analogReference([type]);
+```
 
 ### リクエスト(node.js -> Arduino)
 
@@ -250,28 +279,9 @@ EXTERNAL
 ```js
 {"msg":"OK","type":[type]}
 ```
+### 安定度
 
-### Sample code
-
-```js
-// Low level API
-arduinode.send("ai/ref?type=INTERNAL", function(err, result){
-    if(err) throw err;
-    console.log(result);
-);
-
-// High level API
-arduinode.analogReference("INTERNAL", function(err, result){
-    if(err) throw err;
-    console.log(result);
-});
-```
-
-### 対応するArduinoの操作
-
-```
-analogReference([type]);
-```
+安定
 
 */
 Arduinode.prototype.analogReference = function(type, callback) {
@@ -291,6 +301,26 @@ Arduinode.prototype.analogReference = function(type, callback) {
 ## ポート値読み込み <a name="digitalRead">
 
 指定したポートの値(0 or 1)を読み込みます。
+
+### API
+
+```js
+digitalRead(port, callback);
+```
+
+### Sample code
+var port = 0;
+arduinode.digitalRead(port, function(err, result){
+  if(err) throw err;
+  console.log(result);
+});
+```
+
+### 対応するArduinoの操作
+
+```c
+digitalRead([port]);
+```
 
 ### リクエスト(node.js -> Arduino)
 
@@ -313,27 +343,9 @@ di/read/{port}
 [val]
 :読み込まれたポートの値(0 or 1)
 
-### Sample code
+### 安定度
 
-```js
-// Low level API
-arduinode.send("di/read/0", function(err, result){
-    if(err) throw err;
-    console.log(result);
-);
-
-// High level API
-arduinode.digitalRead(0, function(err, result){
-    if(err) throw err;
-    console.log(result);
-});
-```
-
-### 対応するArduinoの操作
-
-```c
-digitalRead([port]);
-```
+安定
 
 */
 Arduinode.prototype.digitalRead = function(port, callback) {
@@ -347,6 +359,28 @@ Arduinode.prototype.digitalRead = function(port, callback) {
 ## ポート出力 <a name="digitalWrite">
 
 指定したポートに値を書き込みます。
+
+### API
+
+```js
+digitalWrite(port, value, callback);
+```
+
+### Sample code
+
+```js
+var port = 0;
+var value = 1; // 0 or 1 or "HIGH" or "LOW"
+arduinode.digitalWrite(port, value,function(err, result){
+  if(err) throw err;
+  console.log(result);
+});
+```
+
+### 対応するArduinoの操作
+
+```c
+digitalWrite([port], [val]);
 
 ### リクエスト(node.js -> Arduino)
 
@@ -372,27 +406,12 @@ do/write/[port]?val=[val]
 [val]
 :リクエストで指定した値(0 or 1)
 
-### Sample code
-
-```js
-// Low level API
-arduinode.send("do/write/0?val=1", function(err, result){
-    if(err) throw err;
-    console.log(result);
-);
-
-// High level API
-arduinode.digitalWrite(0, 0,function(err, result){
-    if(err) throw err;
-    console.log(result);
-});
 ```
 
-### 対応するArduinoの操作
+### 安定度
 
-```c
-digitalWrite([port], [val]);
-```
+安定
+
 
 */
 Arduinode.prototype.digitalWrite = function(port, val, callback) {
@@ -407,10 +426,33 @@ Arduinode.prototype.digitalWrite = function(port, val, callback) {
 
 指定したポートのピンモードを変更します。
 
+### API
+
+```js
+pinMode(port, mode, callback);
+```
+
+### Sample code
+
+```js
+var port = 0;
+var mode = "INPUT"; // "INPUT" or "INPUT_PULLUP" or "OUTPUT"
+arduinode.pinMode(port, mode, function(err, result){
+  if(err) throw err;
+  console.log(result);
+});
+```
+
+### 対応するArduinoの操作
+
+```c
+pinMode([port], [mode]);
+```
+
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-d/mode/[port]?type=[type]
+d/mode/[port]?type=[mode]
 ```
 
 [port]
@@ -431,30 +473,12 @@ OUTPUT
 ### レスポンス(node.js <- Arduino)
 
 ```js
-{"msg":"OK","type":[type]}
+{"msg":"OK","type":[mode]}
 ```
 
-### Sample code
+### 安定度
 
-```js
-// Low level API
-arduinode.send("d/mode/0?type=INPUT", function(err, result){
-    if(err) throw err;
-    console.log(result);
-);
-
-// High level API
-arduinode.pinMode(0, "INPUT", function(err, result){
-    if(err) throw err;
-    console.log(result);
-});
-```
-
-### 対応するArduinoの操作
-
-```c
-pinMode([port], [type);
-```
+安定
 
 */
 Arduinode.prototype.pinMode = function(port, type, callback) {
@@ -462,14 +486,52 @@ Arduinode.prototype.pinMode = function(port, type, callback) {
   self.send("d/mode/" + port + "?type=" + type, callback);
 }
 
+/***
+
+# Stream(連続転送) API <a name="stream">
+
+リクエストを送らずにDIやAIの値を取得することが出来ます。
+
+Arduinoから送られてきたDIやAIの値は"event"というイベントに通知されるので、以下の様なコードで値を取得することが出来ます。
+
+```js
+arduinode.on("event", function(datas){
+ //datasはデータの配列.
+  console.log(datas);
+});
+```
+
+※ Stream APIの仕様は将来変更される可能性があります。
+
+*/
+
 
 /***
 ## DI連続転送ON <a name="digitalStreamOn">
 
-TODO: 各APIに安定度を記載する.
-http://nodejs.jp/nodejs.org_ja/docs/v0.10/api/documentation.html
-
 指定したポートの連続転送を有効にします.
+
+### API
+
+```js
+digitalStreamOn(port, callback);
+```
+
+### Sample code
+
+```js
+var port = 0;
+arduinode.digitalStreamOn(port, function(err, result){
+  if(err) throw err;
+  console.log(result);
+  // {"msg":"OK", "port":0, "val":1}
+});
+
+// data event. (experimental)
+arduinode.on("event", function(datas){
+  console.log(datas);
+});
+```
 
 ### リクエスト(node.js -> Arduino)
 
@@ -486,27 +548,10 @@ stream/di/on/[port]
 {"msg":"OK", "port":[port], "val":1}
 ```
 
-### Sample code
+### 安定度
 
-```js
-// Low level API
-arduinode.send("stream/di/on/0", function(err, result){
-  if(err) throw err;
-  console.log(result);
-});
+実験的
 
-// High level API
-arduinode.digitalStreamOn(0, function(err, result){
-  if(err) throw err;
-  console.log(result);
-  // {"msg":"OK", "port":0, "val":1}
-});
-
-// data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
-});
-```
 */
 Arduinode.prototype.digitalStreamOn = function(port, callback) {
   var self = this;
@@ -515,9 +560,16 @@ Arduinode.prototype.digitalStreamOn = function(port, callback) {
 
 
 /***
+
 ## DI連続転送OFF <a name="digitalStreamOff">
 
 指定したポートの連続転送を無効にします.
+
+### API
+
+```js
+digitalStreamOff(port, callback);
+```
 
 ### リクエスト(node.js -> Arduino)
 
@@ -539,14 +591,8 @@ stream/di/off/[port]
 ### Sample code
 
 ```js
-// Low level API
-arduinode.send("stream/di/off/0", function(err, result){
-  if(err) throw err;
-  console.log(result);
-});
-
-// High level API
-arduinode.digitalStreamOff(0, function(err, result){
+var port = 0;
+arduinode.digitalStreamOff(port, function(err, result){
   if(err) throw err;
   console.log(result);
   // {"msg":"OK", "port":0, "val":0}
@@ -557,6 +603,11 @@ arduinode.on("event", function(datas){
   console.log(datas);
 });
 ```
+
+### 安定度
+
+実験的
+
 */
 Arduinode.prototype.digitalStreamOff = function(port, callback) {
   var self = this;
@@ -566,10 +617,13 @@ Arduinode.prototype.digitalStreamOff = function(port, callback) {
 /***
 ## AI連続転送ON <a name="analogStreamOn">
 
-TODO: 各APIに安定度を記載する.
-http://nodejs.jp/nodejs.org_ja/docs/v0.10/api/documentation.html
-
 指定したポートの連続転送を有効にします.
+
+### API
+
+```js
+analogStreamOn(port, callback);
+```
 
 ### リクエスト(node.js -> Arduino)
 
@@ -589,14 +643,8 @@ stream/ai/on/[port]
 ### Sample code
 
 ```js
-// Low level API
-arduinode.send("stream/ai/on/0", function(err, result){
-  if(err) throw err;
-  console.log(result);
-});
-
-// High level API
-arduinode.analogStreamOn(0, function(err, result){
+var port = 0;
+arduinode.analogStreamOn(port, function(err, result){
   if(err) throw err;
   console.log(result);
   // {"msg":"OK", "port":0, "val":1}
@@ -607,6 +655,11 @@ arduinode.on("event", function(datas){
   console.log(datas);
 });
 ```
+
+### 安定度
+
+実験的
+
 */
 Arduinode.prototype.analogStreamOn = function(port, callback) {
   var self = this;
@@ -614,9 +667,31 @@ Arduinode.prototype.analogStreamOn = function(port, callback) {
 }
 
 /***
-## DI連続転送OFF <a name="analogStreamOff">
+## AI連続転送OFF <a name="analogStreamOff">
 
 指定したポートの連続転送を無効にします.
+
+### API
+
+```js
+analogStreamOff(port, callback);
+```
+
+### Sample code
+
+```js
+var port = 0;
+arduinode.analogStreamOff(port, function(err, result){
+  if(err) throw err;
+  console.log(result);
+  // {"msg":"OK", "port":0, "val":0}
+});
+
+// data event. (experimental)
+arduinode.on("event", function(datas){
+  console.log(datas);
+});
+```
 
 ### リクエスト(node.js -> Arduino)
 
@@ -635,27 +710,10 @@ stream/ai/off/[port]
 {"msg":"OK", "port":[port], "val":0}
 ```
 
-### Sample code
+### 安定度
 
-```js
-// Low level API
-arduinode.send("stream/ai/off/0", function(err, result){
-  if(err) throw err;
-  console.log(result);
-});
+実験的
 
-// High level API
-arduinode.analogStreamOff(0, function(err, result){
-  if(err) throw err;
-  console.log(result);
-  // {"msg":"OK", "port":0, "val":0}
-});
-
-// data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
-});
-```
 */
 Arduinode.prototype.analogStreamOff = function(port, callback) {
   var self = this;
