@@ -82,6 +82,25 @@ Arduinode.prototype.send = function(cmd, callback) {
   }
 }
 
+/***
+
+
+# はじめに
+
+## APIの安定度
+
+各APIには以下の3段階の安定度があります。現段階では、この安定度の段階すら変更される可能性があります。
+
+1. 実験的
+:実験的なAPIです。将来大きく仕様が変更される可能性があります
+
+2. 不安定
+:まだ十分にテストされていません。しかし、大きな仕様変更はありません。
+
+3. 安定
+:十分にテストされた安定したAPIです。仕様が変更されることはまずありません。
+
+*/
 
 
 /*
@@ -441,6 +460,206 @@ pinMode([port], [type);
 Arduinode.prototype.pinMode = function(port, type, callback) {
   var self = this;
   self.send("d/mode/" + port + "?type=" + type, callback);
+}
+
+
+/***
+## DI連続転送ON <a name="digitalStreamOn">
+
+TODO: 各APIに安定度を記載する.
+http://nodejs.jp/nodejs.org_ja/docs/v0.10/api/documentation.html
+
+指定したポートの連続転送を有効にします.
+
+### リクエスト(node.js -> Arduino)
+
+```txt
+stream/di/on/[port]
+```
+
+[port]
+:ポート番号
+
+### レスポンス(node.js <- Arduino)
+
+```js
+{"msg":"OK", "port":[port], "val":1}
+```
+
+### Sample code
+
+```js
+// Low level API
+arduinode.send("stream/di/on/0", function(err, result){
+  if(err) throw err;
+  console.log(result);
+});
+
+// High level API
+arduinode.digitalStreamOn(0, function(err, result){
+  if(err) throw err;
+  console.log(result);
+  // {"msg":"OK", "port":0, "val":1}
+});
+
+// data event. (experimental)
+arduinode.on("event", function(datas){
+  console.log(datas);
+});
+```
+*/
+Arduinode.prototype.digitalStreamOn = function(port, callback) {
+  var self = this;
+  self.send("stream/di/on/" + port, callback);
+}
+
+
+/***
+## DI連続転送OFF <a name="digitalStreamOff">
+
+指定したポートの連続転送を無効にします.
+
+### リクエスト(node.js -> Arduino)
+
+```txt
+stream/di/off/[port]
+```
+
+[port]
+:ポート番号
+([port]にallを指定すると全てのポートを一括して無効にできる.
+
+
+### レスポンス(node.js <- Arduino)
+
+```js
+{"msg":"OK", "port":[port], "val":0}
+```
+
+### Sample code
+
+```js
+// Low level API
+arduinode.send("stream/di/off/0", function(err, result){
+  if(err) throw err;
+  console.log(result);
+});
+
+// High level API
+arduinode.digitalStreamOff(0, function(err, result){
+  if(err) throw err;
+  console.log(result);
+  // {"msg":"OK", "port":0, "val":0}
+});
+
+// data event. (experimental)
+arduinode.on("event", function(datas){
+  console.log(datas);
+});
+```
+*/
+Arduinode.prototype.digitalStreamOff = function(port, callback) {
+  var self = this;
+  self.send("stream/di/off/" + port, callback);
+}
+
+/***
+## AI連続転送ON <a name="analogStreamOn">
+
+TODO: 各APIに安定度を記載する.
+http://nodejs.jp/nodejs.org_ja/docs/v0.10/api/documentation.html
+
+指定したポートの連続転送を有効にします.
+
+### リクエスト(node.js -> Arduino)
+
+```txt
+stream/ai/on/[port]
+```
+
+[port]
+:ポート番号
+
+### レスポンス(node.js <- Arduino)
+
+```js
+{"msg":"OK", "port":[port], "val":1}
+```
+
+### Sample code
+
+```js
+// Low level API
+arduinode.send("stream/ai/on/0", function(err, result){
+  if(err) throw err;
+  console.log(result);
+});
+
+// High level API
+arduinode.analogStreamOn(0, function(err, result){
+  if(err) throw err;
+  console.log(result);
+  // {"msg":"OK", "port":0, "val":1}
+});
+
+// data event. (experimental)
+arduinode.on("event", function(datas){
+  console.log(datas);
+});
+```
+*/
+Arduinode.prototype.analogStreamOn = function(port, callback) {
+  var self = this;
+  self.send("stream/ai/" + port, callback);
+}
+
+/***
+## DI連続転送OFF <a name="analogStreamOff">
+
+指定したポートの連続転送を無効にします.
+
+### リクエスト(node.js -> Arduino)
+
+```txt
+stream/ai/off/[port]
+```
+
+[port]
+:ポート番号
+([port]にallを指定すると全てのポートを一括して無効にできる.
+
+
+### レスポンス(node.js <- Arduino)
+
+```js
+{"msg":"OK", "port":[port], "val":0}
+```
+
+### Sample code
+
+```js
+// Low level API
+arduinode.send("stream/ai/off/0", function(err, result){
+  if(err) throw err;
+  console.log(result);
+});
+
+// High level API
+arduinode.analogStreamOff(0, function(err, result){
+  if(err) throw err;
+  console.log(result);
+  // {"msg":"OK", "port":0, "val":0}
+});
+
+// data event. (experimental)
+arduinode.on("event", function(datas){
+  console.log(datas);
+});
+```
+*/
+Arduinode.prototype.analogStreamOff = function(port, callback) {
+  var self = this;
+  self.send("stream/ai/off/" + port, callback);
 }
 
 /***
