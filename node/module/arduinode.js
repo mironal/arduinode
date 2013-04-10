@@ -20,6 +20,10 @@ function Arduinode(path, callback){
 
   self.once("ready", callback);
 
+  self.sp.on("error", function(e){
+    self.emit("ready", e, null);
+  });
+
   // arduinoは\r\nを返してくる.
   self.sp.on("data", function(data){
     for(var i = 0; i < data.length; i++){
@@ -31,7 +35,7 @@ function Arduinode(path, callback){
       }else{
         var received = new Buffer(self.buf).toString();
         if(received === "READY"){
-          self.emit("ready");
+          self.emit("ready", null, "ready");
         }else{
           var result = JSON.parse(received);
           // eventってデータが含まれてたらemit
@@ -663,7 +667,7 @@ arduinode.on("event", function(datas){
 */
 Arduinode.prototype.analogStreamOn = function(port, callback) {
   var self = this;
-  self.send("stream/ai/" + port, callback);
+  self.send("stream/ai/on/" + port, callback);
 }
 
 /***
@@ -768,6 +772,11 @@ Arduinode.prototype.close = function(callback) {
     self.sp.close();
     callback();
   });
+}
+
+// 後でUtility関数としてドキュメントを書く
+Arduinode.prototype.list = function(callback) {
+  require("serialport").list(callback);
 }
 
 
