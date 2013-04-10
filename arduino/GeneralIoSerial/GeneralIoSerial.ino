@@ -1,7 +1,10 @@
+#include <avr/pgmspace.h>
+
 #define ARRAYSIZE(array) (sizeof(array) / sizeof(array[0]))
 
-char read_buf[128];
-int buf_index = 0;
+/**************************************************************************
+                                型宣言
+**************************************************************************/
 
 // 各々のコマンドに対して処理を行う関数の型
 typedef String (*TASK_FUNC_PTR)(String str);
@@ -18,12 +21,39 @@ struct STR_UINT8_PEAR {
   uint8_t value;
 };
 
-// pinModeの名前と値を保持するテーブル.
-const struct STR_UINT8_PEAR PIN_MODE_TBL[] = {
-  {"INPUT", INPUT},
-  {"OUTPUT", OUTPUT},
-  {"INPUT_PULLUP", INPUT_PULLUP}
+/**************************************************************************
+                       ボード毎の違いを吸収するｱﾚ
+**************************************************************************/
+
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644P__)
+/*******************
+  Arduino MEGAとか
+*******************/
+
+// A0 - A15
+#define AI_MAX_PORT_NUM 16
+
+// D0 - D49
+#define DI_MAX_PORT_NUM 50
+
+// AI Reference電圧の名前と値を保持するテーブル.
+const struct STR_UINT8_PEAR AI_REF_TBL[] = {
+  {"DEFAULT", DEFAULT},
+  {"INTERNAL1V1", INTERNAL1V1},
+  {"INTERNAL2V56", INTERNAL2V56},
+  {"EXTERNAL", EXTERNAL}
 };
+#else
+/*******************
+  Arduino Unoとか
+*******************/
+
+// A0 - A5
+#define AI_MAX_PORT_NUM 6
+
+// D0 - D13
+#define DI_MAX_PORT_NUM 14
+
 
 // AI Reference電圧の名前と値を保持するテーブル.
 const struct STR_UINT8_PEAR AI_REF_TBL[] = {
@@ -31,6 +61,36 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
   {"INTERNAL", INTERNAL},
   {"EXTERNAL", EXTERNAL}
 };
+#endif
+
+const prog_char ILLEGAL_COMMAND[] PROGMEM       = "Illegal command.";
+const prog_char ILLEGAL_TYPE[] PROGMEM          = "Illegal type.";
+const prog_char ILLEGAL_QUERY[] PROGMEM         = "Illegal query.";
+const prog_char ILLEGAL_VALUE[] PROGMEM         = "Illegal value.";
+const prog_char ILLEGAL_PORT_NUMBER[] PROGMEM   = "Illegal port number.";
+const prog_char QUERY_NOT_FOUND[] PROGMEM       = "Query not found.";
+const prog_char TYPE_IS_NOT_SPECIFIED[] PROGMEM = "type is not specified.";
+const prog_char VAL_IS_NOT_SPECIFIED[] PROGMEM  = "val is not specified.";
+const prog_char COMMAND_IS_TOO_LONG[] PROGMEM   = "Command is too long.";
+
+
+char read_buf[128];
+int buf_index = 0;
+
+// DI連続転送の有効・無効を管理する. bitが立っていると有効.
+// megaのポート数に対応するため64bitにする.
+uint64_t di_stream_enable_ports = 0;
+
+uint16_t ai_stream_enable_ports = 0;
+
+
+// pinModeの名前と値を保持するテーブル.
+const struct STR_UINT8_PEAR PIN_MODE_TBL[] = {
+  {"INPUT", INPUT},
+  {"OUTPUT", OUTPUT},
+  {"INPUT_PULLUP", INPUT_PULLUP}
+};
+
 
 // prefixとタスク関数のテーブルを使ってキメる.
 const struct TASK_FUNC TASK_FUNC_TBL[] = {
@@ -82,12 +142,64 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      Swith digital pin mode.
      format  => d/mode/{port}?type={type}
      {port}  => port number.
-     {type}   => INPUT | OUTPUT | INPUT_PULLUP
+     {type}  => INPUT | OUTPUT | INPUT_PULLUP
      example => d/mode/3?type=INPUT
    */
   {"d/mode/", &switchPinModeTask},
 
   /*
+    DI連続転送ON
+    format   => stream/di/on/{port}
+    {port} => 連続転送を有効にするポート番号
+    example  => stream/di/on/1
+
+     streamのレスポンス
+
+     streamのレスポンスはeventとして定義する
+
+     {"event":"di", "datas":[
+        {"msg":"OK","port":[port],"val":[val]},
+        {"msg":"OK","port":[port],"val":[val]},
+        ...
+        {"msg":"OK","port":[port],"val":[val]}
+     ]}
+   */
+  {"stream/di/on/", &streamDiOnTask},
+
+  /*
+     DI連続転送OFF
+     format => stream/di/off/{port}
+
+     但しstream/di/off/allとやった場合は全てのポートの連続転送がOFFになる
+   */
+  {"stream/di/off/", &streamDiOffTask},
+
+  /*
+    AI連続転送ON
+    format   => stream/ai/on?{ports}
+    {port} => 連続転送を有効にするポート番号
+    example  => stream/ai/on/1
+   */
+  {"stream/ai/on/", &streamAiOnTask},
+
+  /*
+     AI連続転送OFF
+     format => stream/ai/off/1
+
+     但しstream/ai/off/allとやった場合は全てのポートの連続転送がOFFになる
+   */
+  {"stream/ai/off/", &streamAiOffTask},
+
+
+  /*
+    連続転送間隔設定
+    format => stream/delay?{delayMillSec}
+    {delayMillSec} => 変換間隔[msec]
+   */
+  //{"stream/delay", &setStreamDelayTask},
+
+  /*
+TODO: 紛らわしいので後で消す
      Close serial port.
      format => system/close
    */
@@ -108,13 +220,17 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
 
 
 
+
 void setup() {
+  buf_index = 0;
   memset(read_buf,0,128);
+
   Serial.begin(115200);
   Serial.println("READY");
 }
 
 void loop() {
+
   if(Serial.available() > 0){
     while(Serial.available() > 0){
       read_buf[buf_index] = Serial.read();
@@ -127,7 +243,7 @@ void loop() {
         break;
       }
       if(++buf_index >= ARRAYSIZE(read_buf)){
-        Serial.println(NgReturnJson("Command is too long.", "Less than 127 characters, including newlines" ));
+        Serial.println(NgReturnJson(COMMAND_IS_TOO_LONG));
         // なくなるまで読み捨てる.
         while(Serial.available() > 0){Serial.read();}
         memset(read_buf, 0, ARRAYSIZE(read_buf));
@@ -135,6 +251,44 @@ void loop() {
       }
     }
   }
+
+  // enabledがtrueかつ、portsのどれか一つが有効になっていれば
+  // 変換を行う
+  if( di_stream_enable_ports != 0){
+    Serial.print(eventResponseHeader("di"));
+    bool first = true;
+    for(uint8_t i = 0; i < DI_MAX_PORT_NUM; i++){
+      if(bitRead(di_stream_enable_ports, i) == 1){
+        if(first){
+          first = false;
+        }else{
+          Serial.print(",");
+        }
+        Serial.print(diRead(i));
+      }
+    }
+    Serial.println("]}");
+  }
+
+  if( ai_stream_enable_ports != 0){
+    Serial.print(eventResponseHeader("ai"));
+    bool first = true;
+    for(uint8_t i = 0; i < AI_MAX_PORT_NUM; i++){
+      if(bitRead(ai_stream_enable_ports, i) == 1){
+        if(first){
+          first = false;
+        }else{
+          Serial.print(",");
+        }
+        Serial.print(aiRead(i));
+      }
+    }
+    Serial.println("]}");
+  }
+}
+
+String eventResponseHeader(String event){
+  return "{" + stringJson("event", event) + "," + wrapDq("datas") + ":[";
 }
 
 
@@ -148,7 +302,7 @@ String task(String msg){
     }
   }
   // TODO JSONでエスケープするべき文字が入っていると受信した側でヤバイ気がする.
-  return NgReturnJson("Illegal command.", msg);
+  return NgReturnJson(ILLEGAL_COMMAND);
 }
 
 String switchPinModeTask(String portWithQuery){
@@ -165,7 +319,7 @@ String switchPinModeTask(String portWithQuery){
   if(valQuery.startsWith("type=")){
     valQuery.replace("type=", "");
   }else{
-    return NgReturnJson("type is not specified.", valQuery);
+    return NgReturnJson(TYPE_IS_NOT_SPECIFIED);
   }
 
   for(int i = 0; i < ARRAYSIZE(PIN_MODE_TBL); i++){
@@ -174,14 +328,14 @@ String switchPinModeTask(String portWithQuery){
       return switchTypeReturnJson("OK", valQuery);
     }
   }
-  return NgReturnJson("Illegal type.", valQuery);
+  return NgReturnJson(ILLEGAL_TYPE);
 }
 
 String checkHasQuery(String query, int *at){
   *at = query.indexOf('?');
   if(*at == -1){
     // queryが指定されていなかったら-1で返す.
-    return NgReturnJson("Query not found.", query);
+    return NgReturnJson(QUERY_NOT_FOUND);
   }
   return NULL;
 }
@@ -196,7 +350,7 @@ String checkPortWithQuery(String portWithQuery, int *port, String *query){
 
   String portQuery = portWithQuery.substring(0, at);
   if(!isInt(portQuery)){
-    return NgReturnJson("Illegal port number.", portQuery);
+    return NgReturnJson(ILLEGAL_PORT_NUMBER);
   }
   *port = strToInt(portQuery);
   *query = portWithQuery.substring(at + 1);
@@ -217,7 +371,7 @@ String checkPortWithValue(String portWithValue, int *port, int *val){
   if(valQuery.startsWith("val=")){
     valQuery.replace("val=","");
   }else{
-    return NgReturnJson("val is not specified.", valQuery);
+    return NgReturnJson(VAL_IS_NOT_SPECIFIED);
   }
 
   // HIGH, LOWのチェックはdoWriteTask用
@@ -228,7 +382,7 @@ String checkPortWithValue(String portWithValue, int *port, int *val){
   }else if(isInt(valQuery)){
     *val = strToInt(valQuery);
   }else{
-    return NgReturnJson("Illegal value.", valQuery);
+    return NgReturnJson(ILLEGAL_VALUE);
   }
 
   return NULL;
@@ -248,7 +402,7 @@ String aoWriteTask(String portWithValue){
   }
 
   analogWrite(port, val);
-  return ioReturnJson("OK", port, val);
+  return okIoJson(port, val);
 }
 
 
@@ -267,13 +421,13 @@ String doWriteTask(String portWithValue){
     digitalWrite(port, LOW);
     val = 0;
   }
-  return ioReturnJson("OK", port, val);
+  return okIoJson(port, val);
 }
 
 
 String checkPortQuery(String portQuery){
   if(!isInt(portQuery)){
-    return NgReturnJson("Illegal port number.", portQuery);
+    return NgReturnJson(ILLEGAL_PORT_NUMBER);
   }
   return NULL;
 }
@@ -283,9 +437,13 @@ String diReadTask(String portQuery){
   if(error){
     return error;
   }
-  int port = strToInt(portQuery);
+  uint8_t port = strToInt(portQuery);
+  return diRead(port);
+}
+
+String diRead(uint8_t port){
   int val = digitalRead(port);
-  return ioReturnJson("OK", port, val);
+  return okIoJson(port, val);
 }
 
 /*
@@ -296,17 +454,15 @@ String aiReadTask(String portQuery){
   if(error){
     return error;
   }
-  int port = strToInt(portQuery);
-  int val = analogRead(port);
-  return ioReturnJson("OK", port, val);
+  uint8_t port = strToInt(portQuery);
+  return aiRead(port);
 }
 
-String ioReturnJson(String msg, int port, int val){
-  String body = wrapDq("msg") + ":"+wrapDq(msg)
-    + "," + wrapDq("port") + ":" + String(port)
-    + "," + wrapDq("val") + ":" + String(val);
-  return wraped('{', body, '}');
+String aiRead(uint8_t port){
+  int val = analogRead(port);
+  return okIoJson(port, val);
 }
+
 
 
 /*
@@ -326,13 +482,70 @@ String aiRefSwitchTask(String ref){
     }
   }
   ref.replace("?type=", "");
-  return NgReturnJson("Illegal type.", ref);
+  return NgReturnJson(ILLEGAL_TYPE);
 }
 
-String switchTypeReturnJson(String msg, String refType){
-  String body = wrapDq("msg") + ":" + wrapDq(msg)
-    + "," + wrapDq("type") + ":" + wrapDq(refType);
-  return wraped('{', body, '}');
+
+String streamDiOnTask(String query){
+
+  String error = checkPortQuery(query);
+  if(error){
+    return error;
+  }
+
+  uint8_t port = strToInt(query);
+  bitSet(di_stream_enable_ports, port);
+
+  return okIoJson(port, 1);
+}
+
+String streamDiOffTask(String query){
+
+  if(query == "all"){
+    di_stream_enable_ports = 0;
+    return okIoJson(0xff, 0);
+  }
+
+  String error = checkPortQuery(query);
+  if(error){
+    return error;
+  }
+
+  uint8_t port = strToInt(query);
+  bitClear(di_stream_enable_ports, port);
+
+  return okIoJson(port, 0);
+}
+
+String streamAiOnTask(String query){
+
+  String error = checkPortQuery(query);
+  if(error){
+    return error;
+  }
+
+  uint8_t port = strToInt(query);
+  bitSet(ai_stream_enable_ports, port);
+
+  return okIoJson(port, 1);
+}
+
+String streamAiOffTask(String query){
+
+  if(query == "all"){
+    ai_stream_enable_ports = 0;
+    return okIoJson(0xff, 0);
+  }
+
+  String error = checkPortQuery(query);
+  if(error){
+    return error;
+  }
+
+  uint8_t port = strToInt(query);
+  bitClear(ai_stream_enable_ports, port);
+
+  return okIoJson(port, 0);
 }
 
 
@@ -353,22 +566,7 @@ String resetTask(String empty){
    Utility functions.
  */
 
-String NgReturnJson(String err, String hint){
-  String body = wrapDq("msg") + ":" + wrapDq("NG") + "," + wrapDq("error") + ":" + wrapDq(err) + "," + wrapDq("hint") + ":" + wrapDq(hint);
-  return wraped('{', body, '}');
-}
 
-String wrapDq(String str){
-  return wrapChar(str, '"');
-}
-
-String wrapChar(String str, char wrap){
-  return wraped(wrap, str, wrap);
-}
-
-String wraped(char before, String body, char after){
-  return before + body + after;
-}
 
 boolean isInt(String str){
   for(int i = 0; i < str.length(); i++){
@@ -405,6 +603,28 @@ int strToInt(String str){
   return rslt;
 }
 
+uint64_t strToUInt64(String str){
+  char buf[128] = {0};
+  int b_i = 0;
+  /// 123という並びで来たら、321という並びでbufに格納される
+  for(int i = 0; i < str.length(); i++){
+    char c = str[i];
+    if( (c >= '0') && (c <= '9') ){
+      buf[b_i++] = c;
+    }else{
+      break;
+    }
+  }
+
+  uint64_t rslt = 0;
+  if(b_i > 0){
+    for(int i = 0; i < b_i; i++){
+      rslt += (int)(buf[i] - '0') * intPow(10, (b_i - 1) - i);
+    }
+  }
+  return rslt;
+}
+
 int intPow(int base, int e){
   if( e == 0){
     return 1;
@@ -417,4 +637,69 @@ int intPow(int base, int e){
     rslt *= base;
   }
   return rslt;
+}
+
+/*
+   JSON変換関連
+ */
+
+
+
+String okIoJson(uint8_t port, uint8_t val){
+  String body = stringJson("msg", "OK") + ","
+    + intJson("port", port) + ","
+    + intJson("val", val);
+
+  return wrapBrace(body);
+}
+
+
+String switchTypeReturnJson(String msg, String refType){
+  String body = stringJson("msg", msg) + ","
+    + stringJson("type", refType);
+
+  return wrapBrace(body);
+}
+
+
+String NgReturnJson(const prog_char *err){
+  char buf[60] = {0};
+  strcpy_P(buf, err);
+  String body = stringJson("msg", "NG") + ","
+    + stringJson("error", buf);
+
+  return wrapBrace(body);
+}
+
+String boolJson(String key, bool value){
+  String str = value ? "true" : "false";
+  return wrapDq(key) + ":" + str;
+}
+
+String intJson(String key, int value){
+  return wrapDq(key) + ":" + String(value);
+}
+
+String stringJson(String key, String value){
+  return wrapDq(key) + ":" + wrapDq(value);
+}
+
+/*
+   文字列を囲んだりする奴
+ */
+
+String wrapBrace(String str){
+  return wraped('{', str, '}');
+}
+
+String wrapDq(String str){
+  return wrapChar(str, '"');
+}
+
+String wrapChar(String str, char wrap){
+  return wraped(wrap, str, wrap);
+}
+
+String wraped(char before, String body, char after){
+  return before + body + after;
 }

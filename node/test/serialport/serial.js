@@ -70,7 +70,7 @@ var tests = [
 {
   name:"Illegal Command.",
   cmd:"aaaaa",
-  expect:JSON.stringify({msg:"NG", error:"Illegal command.", hint:"aaaaa"}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal command."}),
   send:false
 },
 {
@@ -82,25 +82,25 @@ var tests = [
 {
   name:"AO write test. No query.",
   cmd:"ao/write/3",
-  expect:JSON.stringify({msg:"NG", error:"Query not found.", hint:"3"}),
+  expect:JSON.stringify({msg:"NG", error:"Query not found."}),
   send:false
 },
 {
   name:"AO write test. Illegal query.",
   cmd:"ao/write/3?hoge",
-  expect:JSON.stringify({msg:"NG", error:"val is not specified.", hint:"hoge"}),
+  expect:JSON.stringify({msg:"NG", error:"val is not specified."}),
   send:false
 },
 {
   name:"AO write test. Illegal value. ",
   cmd:"ao/write/3?val=hoge",
-  expect:JSON.stringify({msg:"NG", error:"Illegal value.", hint:"hoge"}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal value."}),
   send:false
 },
 {
   name:"AO write test. Illegal port number. ",
   cmd:"ao/write/a?val=20",
-  expect:JSON.stringify({msg:"NG", error:"Illegal port number.", hint:"a"}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
@@ -124,7 +124,7 @@ var tests = [
 {
   name:"AI Reference test. Unknown type.",
   cmd:"ai/ref?type=hoge",
-  expect:JSON.stringify({msg:"NG", error:"Illegal type.", hint:"hoge"}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal type."}),
   send:false
 },
 {
@@ -136,7 +136,7 @@ var tests = [
 {
   name:"AI read test. Illegal port.",
   cmd:"ai/read/a",
-  expect:JSON.stringify({msg:"NG", error:"Illegal port number.", hint:"a"}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
@@ -148,7 +148,7 @@ var tests = [
 {
   name:"DI read test. Illegal port",
   cmd:"di/read/aa",
-  expect:JSON.stringify({msg:"NG", error:"Illegal port number.", hint:"aa"}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
@@ -172,25 +172,25 @@ var tests = [
 {
   name:"DO write test. No query.",
   cmd:"do/write/3",
-  expect:JSON.stringify({msg:"NG", error:"Query not found.", hint:"3"}),
+  expect:JSON.stringify({msg:"NG", error:"Query not found."}),
   send:false
 },
 {
   name:"DO write test. Illegal port number.",
   cmd:"do/write/b?val=3",
-  expect:JSON.stringify({msg:"NG", error:"Illegal port number.", hint:"b"}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
   name:"DO write test. Illegal query.",
   cmd:"do/write/3?hoge",
-  expect:JSON.stringify({msg:"NG", error:"val is not specified.", hint:"hoge"}),
+  expect:JSON.stringify({msg:"NG", error:"val is not specified."}),
   send:false
 },
 {
   name:"DO write test. Illegal value.",
   cmd:"do/write/3?val=hoge",
-  expect:JSON.stringify({msg:"NG", error:"Illegal value.", hint:"hoge"}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal value."}),
   send:false
 },
 {
@@ -214,13 +214,13 @@ var tests = [
 {
   name:"Switch pin mode. Unknown type.",
   cmd:"d/mode/3?type=hogehoge",
-  expect:JSON.stringify({msg:"NG",error:"Illegal type.", hint:"hogehoge"}),
+  expect:JSON.stringify({msg:"NG",error:"Illegal type."}),
   send:false
 },
 {
   name:"Too long command.",
   cmd:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  expect:JSON.stringify({msg:"NG", error:"Command is too long.", hint:"Less than 127 characters, including newlines"}),
+  expect:JSON.stringify({msg:"NG", error:"Command is too long."}),
   send:false
 }
 ];
