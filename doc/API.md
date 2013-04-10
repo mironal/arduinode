@@ -1,4 +1,5 @@
 # 目次
+* [コンストラクタ](#Arduinode)
 * [Analogポートに関する操作](#analog)
     * [AD値読み込み : analogRead](#analogRead)
     * [アナログ値(PWM)出力 : analogWrite](#analogWrite)
@@ -30,6 +31,23 @@
 
 3.固定
 :十分にテストされた安定したAPIです。仕様が変更されることはまずありません。
+
+
+# コンストラクタ <a name="Arduinode">
+
+### Sample code
+
+```js
+// npm install arduinode
+var Arduinode = require("arduinode").Arduinode;
+
+var portname = "Your serial port name";
+
+var arduinode = new Arduinode(portname, function(err, result){
+  if(err) throw err; // can't open.
+  console.log(result);
+});
+```
 
 
 # Analogポートに関する操作 <a name="analog">
