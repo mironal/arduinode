@@ -38,6 +38,7 @@
 ### Sample code
 
 ```js
+// npm install arduinode
 var Arduinode = require("arduinode").Arduinode;
 
 var portname = "Your serial port name";
