@@ -54,6 +54,13 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
 // D0 - D13
 #define DI_MAX_PORT_NUM 14
 
+struct STREAM_INFO {
+  uint64_t interval_ms;
+  uint64_t counter;
+};
+
+volatile struct STREAM_INFO ai_stream_info[AI_MAX_PORT_NUM];
+volatile struct STREAM_INFO di_stream_info[DI_MAX_PORT_NUM];
 
 // AI Reference電圧の名前と値を保持するテーブル.
 const struct STR_UINT8_PEAR AI_REF_TBL[] = {
@@ -61,6 +68,56 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
   {"INTERNAL", INTERNAL},
   {"EXTERNAL", EXTERNAL}
 };
+
+// 24時間のmsec表現
+
+// タイマ割り込み
+volatile uint32_t timer2_tcnt2 = 0;
+
+void timer2Start(){
+  float prescaler = 0.0;
+
+  TIMSK2 &= ~(1<<TOIE2);
+  TCCR2A &= ~((1<<WGM21) | (1<<WGM20));
+  TCCR2B &= ~(1<<WGM22);
+  ASSR &= ~(1<<AS2);
+  TIMSK2 &= ~(1<<OCIE2A);
+
+  if ((F_CPU >= 1000000UL) && (F_CPU <= 16000000UL)) {  // prescaler set to 64
+    TCCR2B |= (1<<CS22);
+    TCCR2B &= ~((1<<CS21) | (1<<CS20));
+    prescaler = 64.0;
+  } else if (F_CPU < 1000000UL) { // prescaler set to 8
+    TCCR2B |= (1<<CS21);
+    TCCR2B &= ~((1<<CS22) | (1<<CS20));
+    prescaler = 8.0;
+  } else { // F_CPU > 16Mhz,  prescaler set to 128
+    TCCR2B |= ((1<<CS22) | (1<<CS20));
+    TCCR2B &= ~(1<<CS21);
+    prescaler = 128.0;
+  }
+
+  timer2_tcnt2 = 256 - (int)((float)F_CPU * 0.001 / prescaler);
+
+  TCNT2 = timer2_tcnt2;
+  TIMSK2 |= (1<<TOIE2);
+}
+
+void timer2Stop(){
+  TIMSK2 &= ~(1<<TOIE2);
+}
+
+ISR(TIMER2_OVF_vect) {
+  TCNT2 = timer2_tcnt2;
+
+  int i = 0;
+  for(; i < AI_MAX_PORT_NUM; ++i){
+    ++ai_stream_info[i].counter;
+  }
+  for(i = 0; i < DI_MAX_PORT_NUM; ++i){
+    ++di_stream_info[i].counter;
+  }
+}
 #endif
 
 const prog_char ILLEGAL_COMMAND[] PROGMEM       = "Illegal command.";
@@ -79,9 +136,9 @@ int buf_index = 0;
 
 // DI連続転送の有効・無効を管理する. bitが立っていると有効.
 // megaのポート数に対応するため64bitにする.
-uint64_t di_stream_enable_ports = 0;
+//uint64_t di_stream_enable_ports = 0;
 
-uint16_t ai_stream_enable_ports = 0;
+//uint16_t ai_stream_enable_ports = 0;
 
 
 // pinModeの名前と値を保持するテーブル.
@@ -149,20 +206,12 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
 
   /*
     DI連続転送ON
-    format   => stream/di/on/{port}
-    {port} => 連続転送を有効にするポート番号
-    example  => stream/di/on/1
+    format  => stream/di/on/{port}?interval={msec}
+    {port}  => 連続転送を有効にするポート番号
+    {msec}  => DIポート読み取り間隔(ミリ秒)
+    example => stream/di/on/1?interval=1000
 
-     streamのレスポンス
 
-     streamのレスポンスはeventとして定義する
-
-     {"event":"di", "datas":[
-        {"msg":"OK","port":[port],"val":[val]},
-        {"msg":"OK","port":[port],"val":[val]},
-        ...
-        {"msg":"OK","port":[port],"val":[val]}
-     ]}
    */
   {"stream/di/on/", &streamDiOnTask},
 
@@ -176,8 +225,9 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
 
   /*
     AI連続転送ON
-    format   => stream/ai/on?{ports}
+    format   => stream/ai/on/{port}?interval={msec}
     {port} => 連続転送を有効にするポート番号
+    {msec}  => AIポート読み取り間隔(ミリ秒)
     example  => stream/ai/on/1
    */
   {"stream/ai/on/", &streamAiOnTask},
@@ -227,6 +277,8 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println("READY");
+  pinMode(13, OUTPUT);
+  timer2Start();
 }
 
 void loop() {
@@ -254,6 +306,7 @@ void loop() {
 
   // enabledがtrueかつ、portsのどれか一つが有効になっていれば
   // 変換を行う
+  /*
   if( di_stream_enable_ports != 0){
     Serial.print(eventResponseHeader("di"));
     bool first = true;
@@ -285,6 +338,7 @@ void loop() {
     }
     Serial.println("]}");
   }
+  */
 }
 
 String eventResponseHeader(String event){
@@ -308,7 +362,7 @@ String task(String msg){
 String switchPinModeTask(String portWithQuery){
 
   String valQuery;
-  int port;
+  uint8_t port;
 
   String error = checkPortWithQuery(portWithQuery, &port, &valQuery);
 
@@ -340,7 +394,7 @@ String checkHasQuery(String query, int *at){
   return NULL;
 }
 
-String checkPortWithQuery(String portWithQuery, int *port, String *query){
+String checkPortWithQuery(String portWithQuery, uint8_t *port, String *query){
 
   int at = 0;
   String error = checkHasQuery(portWithQuery, &at);
@@ -358,7 +412,37 @@ String checkPortWithQuery(String portWithQuery, int *port, String *query){
   return NULL;
 }
 
-String checkPortWithValue(String portWithValue, int *port, int *val){
+
+// {port}?interval={msec}なクエリーを分解.
+String checkPortWithInterval(String portWithInterval, uint8_t *port, uint64_t *interval){
+
+  String intervalQuery;
+
+  String error = checkPortWithQuery(portWithInterval, port, &intervalQuery);
+  if(error){
+    return error;
+  }
+
+  // intervalが指定されていなかったらintervalを1にする.
+  if(intervalQuery.startsWith("interval=")){
+    intervalQuery.replace("interval=", "");
+    // intervalに整数以外が指定されていたらエラー
+    if(isInt(intervalQuery)){
+      *interval = strToUInt64(intervalQuery);
+      // 0はサンプリング停止なので1に書き換える.
+      if(*interval == 0){
+        *interval = 1;
+      }
+    }else{
+      return NgReturnJson(ILLEGAL_VALUE);
+    }
+  }else{
+    *interval = 1;
+  }
+  return NULL;
+}
+
+String checkPortWithValue(String portWithValue, uint8_t *port, int *val){
 
   String valQuery;
 
@@ -393,7 +477,7 @@ String checkPortWithValue(String portWithValue, int *port, int *val){
    で入ってくる.
  */
 String aoWriteTask(String portWithValue){
-  int port = 0;
+  uint8_t port = 0;
   int val = 0;
 
   String error = checkPortWithValue(portWithValue, &port, &val);
@@ -407,7 +491,7 @@ String aoWriteTask(String portWithValue){
 
 
 String doWriteTask(String portWithValue){
-  int port = 0;
+  uint8_t port = 0;
   int val = 0;
 
   String error = checkPortWithValue(portWithValue, &port, &val);
@@ -486,23 +570,33 @@ String aiRefSwitchTask(String ref){
 }
 
 
-String streamDiOnTask(String query){
+String streamDiOnTask(String portWithInterval){
 
-  String error = checkPortQuery(query);
+  uint64_t interval;
+  uint8_t port;
+
+  String error = checkPortWithInterval(portWithInterval, &port, &interval);
   if(error){
     return error;
   }
 
-  uint8_t port = strToInt(query);
-  bitSet(di_stream_enable_ports, port);
+  if(port >= DI_MAX_PORT_NUM){
+    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  }
 
+  di_stream_info[port].interval_ms = interval;
+  di_stream_info[port].counter = 0;
+
+  // TODO: stream用のレスポンスを考える.
   return okIoJson(port, 1);
 }
 
 String streamDiOffTask(String query){
 
   if(query == "all"){
-    di_stream_enable_ports = 0;
+    for(uint8_t i = 0; i < DI_MAX_PORT_NUM; i++){
+      di_stream_info[i].interval_ms = 0;
+    }
     return okIoJson(0xff, 0);
   }
 
@@ -512,20 +606,30 @@ String streamDiOffTask(String query){
   }
 
   uint8_t port = strToInt(query);
-  bitClear(di_stream_enable_ports, port);
+  if(port >= DI_MAX_PORT_NUM){
+    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  }
+  di_stream_info[port].interval_ms = 0;
 
   return okIoJson(port, 0);
 }
 
-String streamAiOnTask(String query){
+String streamAiOnTask(String portWithInterval){
 
-  String error = checkPortQuery(query);
+  uint64_t interval;
+  uint8_t port;
+
+  String error = checkPortWithInterval(portWithInterval, &port, &interval);
   if(error){
     return error;
   }
 
-  uint8_t port = strToInt(query);
-  bitSet(ai_stream_enable_ports, port);
+  if(port >= AI_MAX_PORT_NUM){
+    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  }
+
+  ai_stream_info[port].interval_ms = interval;
+  ai_stream_info[port].counter = 0;
 
   return okIoJson(port, 1);
 }
@@ -533,7 +637,9 @@ String streamAiOnTask(String query){
 String streamAiOffTask(String query){
 
   if(query == "all"){
-    ai_stream_enable_ports = 0;
+    for(uint8_t i = 0; i < AI_MAX_PORT_NUM; i++){
+      ai_stream_info[i].interval_ms = 0;
+    }
     return okIoJson(0xff, 0);
   }
 
@@ -543,7 +649,10 @@ String streamAiOffTask(String query){
   }
 
   uint8_t port = strToInt(query);
-  bitClear(ai_stream_enable_ports, port);
+  if(port >= AI_MAX_PORT_NUM){
+    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  }
+  ai_stream_info[port].interval_ms = 0;
 
   return okIoJson(port, 0);
 }
