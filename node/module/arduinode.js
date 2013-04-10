@@ -11,6 +11,45 @@ var options = {
   flowControl: false,
 };
 
+/***
+
+
+# はじめに
+
+## APIの安定度
+
+各APIには以下の3段階の安定度があります。現段階では、この安定度の段階すら変更される可能性があります。
+
+1. 実験的
+:実験的なAPIです。将来大きく仕様が変更される可能性があります
+
+2. 安定
+:まだ十分にテストされていません。しかし、大きな仕様変更はありません。
+
+3.固定
+:十分にテストされた安定したAPIです。仕様が変更されることはまずありません。
+
+*/
+
+/***
+
+# コンストラクタ <a name="Arduinode">
+
+### Sample code
+
+```js
+var Arduinode = require("arduinode").Arduinode;
+
+var portname = "Your serial port name";
+
+var arduinode = new Arduinode(portname, function(err, result){
+  if(err) throw err; // can't open.
+  console.log(result);
+});
+```
+
+*/
+
 function Arduinode(path, callback){
   var self = this;
   self.sp = new SerialPort(path, options);
@@ -85,27 +124,6 @@ Arduinode.prototype.send = function(cmd, callback) {
     callback(error, null);
   }
 }
-
-/***
-
-
-# はじめに
-
-## APIの安定度
-
-各APIには以下の3段階の安定度があります。現段階では、この安定度の段階すら変更される可能性があります。
-
-1. 実験的
-:実験的なAPIです。将来大きく仕様が変更される可能性があります
-
-2. 安定
-:まだ十分にテストされていません。しかし、大きな仕様変更はありません。
-
-3.固定
-:十分にテストされた安定したAPIです。仕様が変更されることはまずありません。
-
-*/
-
 
 /*
  * High level API
