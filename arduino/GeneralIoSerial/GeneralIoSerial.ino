@@ -304,41 +304,24 @@ void loop() {
     }
   }
 
-  // enabledがtrueかつ、portsのどれか一つが有効になっていれば
-  // 変換を行う
-  /*
-  if( di_stream_enable_ports != 0){
-    Serial.print(eventResponseHeader("di"));
-    bool first = true;
-    for(uint8_t i = 0; i < DI_MAX_PORT_NUM; i++){
-      if(bitRead(di_stream_enable_ports, i) == 1){
-        if(first){
-          first = false;
-        }else{
-          Serial.print(",");
-        }
-        Serial.print(diRead(i));
+  for(uint8_t i = 0; i < AI_MAX_PORT_NUM; i++){
+    if(ai_stream_info[i].interval_ms){
+      if(ai_stream_info[i].counter > ai_stream_info[i].interval_ms){
+        ai_stream_info[i].counter = 0;
+        Serial.println(aiRead(i));
       }
     }
-    Serial.println("]}");
   }
 
-  if( ai_stream_enable_ports != 0){
-    Serial.print(eventResponseHeader("ai"));
-    bool first = true;
-    for(uint8_t i = 0; i < AI_MAX_PORT_NUM; i++){
-      if(bitRead(ai_stream_enable_ports, i) == 1){
-        if(first){
-          first = false;
-        }else{
-          Serial.print(",");
-        }
-        Serial.print(aiRead(i));
+  for(uint8_t i = 0; i < DI_MAX_PORT_NUM; i++){
+    if(di_stream_info[i].interval_ms){
+      if(di_stream_info[i].counter > di_stream_info[i].interval_ms){
+        di_stream_info[i].counter = 0;
+        Serial.println(diRead(i));
       }
     }
-    Serial.println("]}");
   }
-  */
+
 }
 
 String eventResponseHeader(String event){
