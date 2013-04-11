@@ -385,11 +385,51 @@ OUTPUT
 Arduinoから送られてきたDIやAIの値は"event"というイベントに通知されるので、以下の様なコードで値を取得することが出来ます。
 
 ```js
-arduinode.on("event", function(datas){
- //datasはデータの配列.
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
+
+コールバック関数のdataに格納されている情報は以下の様なJSONになっています。
+
+```js
+{"event":"[type]", "data":[dataJson]}
+```
+
+[type]はイベントの種類を表します。
+
+AI読み取りなら"ai"が、DI読み取りなら"di"が格納されています。
+
+[dataJson]はそのイベントで読み取られた情報が格納されています。
+
+AIならanalogRead()を実行した時のレスポンスと同じ内容が、DIならdigitalRead()を実行した時のレスポンスと同じ内容のJSONが格納されています。
+
+例えばAI0の読み取り時に発生するeventのdataは以下のようになります(但しvalは環境により変わります。
+
+```js
+{"event":"ai", "data":{"msg":"OK", "port":0, "val":100}}
+```
+
+AI、DIに関わらず、同一のイベントが発生するので必要に応じて条件分岐をする必要があります。
+
+```js
+arduinode.on("event", function(data){
+  switch(data.event){
+    case "di":
+      console.log("************** Digital stream event. **************");
+      console.log(data.data);
+      break;
+    case "ai":
+      console.log("************** Analog stream event. **************");
+      console.log(data.data);
+      break;
+    default:
+      console.log("Unkown event.");
+  }
+});
+```
+但し、これは将来より簡潔に記述するためのAPIを提供する予定です。
+
 
 ※ Stream APIの仕様は将来変更される可能性があります。
 
@@ -400,33 +440,37 @@ arduinode.on("event", function(datas){
 ### API
 
 ```js
-digitalStreamOn(port, callback);
+digitalStreamOn(port, interval, callback);
 ```
 
 ### Sample code
 
 ```js
 var port = 0;
-arduinode.digitalStreamOn(port, function(err, result){
+var interval = 500; // 500[ms]
+arduinode.digitalStreamOn(port, interval, function(err, result){
   if(err) throw err;
   console.log(result);
   // {"msg":"OK", "port":0, "val":1}
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-stream/di/on/[port]
+stream/di/on/[port]?interval=[interval]
 ```
 
 [port]
 :ポート番号
+
+[interval]
+:転送間隔
 
 ### レスポンス(node.js <- Arduino)
 
@@ -477,8 +521,8 @@ arduinode.digitalStreamOff(port, function(err, result){
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
@@ -493,17 +537,20 @@ arduinode.on("event", function(datas){
 ### API
 
 ```js
-analogStreamOn(port, callback);
+analogStreamOn(port, interval, callback);
 ```
 
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-stream/ai/on/[port]
+stream/ai/on/[port]?interval=[interval]
 ```
 
 [port]
 :ポート番号
+
+[interval]
+:転送間隔
 
 ### レスポンス(node.js <- Arduino)
 
@@ -515,15 +562,16 @@ stream/ai/on/[port]
 
 ```js
 var port = 0;
-arduinode.analogStreamOn(port, function(err, result){
+var interval = 1000; // 1000[ms] = 1[s]
+arduinode.analogStreamOn(port, interval, function(err, result){
   if(err) throw err;
   console.log(result);
   // {"msg":"OK", "port":0, "val":1}
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
@@ -552,8 +600,8 @@ arduinode.analogStreamOff(port, function(err, result){
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 

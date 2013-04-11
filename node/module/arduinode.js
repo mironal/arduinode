@@ -523,6 +523,49 @@ arduinode.on("event", function(data){
 });
 ```
 
+コールバック関数のdataに格納されている情報は以下の様なJSONになっています。
+
+```js
+{"event":"[type]", "data":[dataJson]}
+```
+
+[type]はイベントの種類を表します。
+
+AI読み取りなら"ai"が、DI読み取りなら"di"が格納されています。
+
+[dataJson]はそのイベントで読み取られた情報が格納されています。
+
+AIならanalogRead()を実行した時のレスポンスと同じ内容が、DIならdigitalRead()を実行した時のレスポンスと同じ内容のJSONが格納されています。
+
+例えばAI0の読み取り時に発生するeventのdataは以下のようになります(但しvalは環境により変わります。
+
+```js
+{"event":"ai", "data":{"msg":"OK", "port":0, "val":100}}
+```
+
+AI、DIに関わらず、同一のイベントが発生するので必要に応じて条件分岐をする必要があります。
+
+```js
+arduinode.on("event", function(data){
+  switch(data.event){
+    case "di":
+      console.log("************** Digital stream event. **************");
+      console.log(data.data);
+      break;
+    case "ai":
+      console.log("************** Analog stream event. **************");
+      console.log(data.data);
+      break;
+    default:
+      console.log("Unkown event.");
+  }
+});
+```
+
+
+但し、これは将来より簡潔に記述するためのAPIを提供する予定です。
+
+
 ※ Stream APIの仕様は将来変更される可能性があります。
 
 */
@@ -551,8 +594,8 @@ arduinode.digitalStreamOn(port, interval, function(err, result){
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
@@ -625,8 +668,8 @@ arduinode.digitalStreamOff(port, function(err, result){
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
@@ -718,8 +761,8 @@ arduinode.analogStreamOff(port, function(err, result){
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
