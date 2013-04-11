@@ -518,9 +518,8 @@ Arduinode.prototype.pinMode = function(port, type, callback) {
 Arduinoから送られてきたDIやAIの値は"event"というイベントに通知されるので、以下の様なコードで値を取得することが出来ます。
 
 ```js
-arduinode.on("event", function(datas){
- //datasはデータの配列.
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
@@ -537,14 +536,15 @@ arduinode.on("event", function(datas){
 ### API
 
 ```js
-digitalStreamOn(port, callback);
+digitalStreamOn(port, interval, callback);
 ```
 
 ### Sample code
 
 ```js
 var port = 0;
-arduinode.digitalStreamOn(port, function(err, result){
+var interval = 500; // 500[ms]
+arduinode.digitalStreamOn(port, interval, function(err, result){
   if(err) throw err;
   console.log(result);
   // {"msg":"OK", "port":0, "val":1}
@@ -559,11 +559,14 @@ arduinode.on("event", function(datas){
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-stream/di/on/[port]
+stream/di/on/[port]?interval=[interval]
 ```
 
 [port]
 :ポート番号
+
+[interval]
+:転送間隔
 
 ### レスポンス(node.js <- Arduino)
 
@@ -576,9 +579,9 @@ stream/di/on/[port]
 実験的
 
 */
-Arduinode.prototype.digitalStreamOn = function(port, callback) {
+Arduinode.prototype.digitalStreamOn = function(port, interval, callback) {
   var self = this;
-  self.send("stream/di/on/" + port, callback);
+  self.send("stream/di/on/" + port + "?interval=" + interval, callback);
 }
 
 
@@ -645,17 +648,20 @@ Arduinode.prototype.digitalStreamOff = function(port, callback) {
 ### API
 
 ```js
-analogStreamOn(port, callback);
+analogStreamOn(port, interval, callback);
 ```
 
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-stream/ai/on/[port]
+stream/ai/on/[port]?interval=[interval]
 ```
 
 [port]
 :ポート番号
+
+[interval]
+:転送間隔
 
 ### レスポンス(node.js <- Arduino)
 
@@ -667,15 +673,16 @@ stream/ai/on/[port]
 
 ```js
 var port = 0;
-arduinode.analogStreamOn(port, function(err, result){
+var interval = 1000; // 1000[ms] = 1[s]
+arduinode.analogStreamOn(port, interval, function(err, result){
   if(err) throw err;
   console.log(result);
   // {"msg":"OK", "port":0, "val":1}
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
@@ -684,9 +691,9 @@ arduinode.on("event", function(datas){
 実験的
 
 */
-Arduinode.prototype.analogStreamOn = function(port, callback) {
+Arduinode.prototype.analogStreamOn = function(port, interval, callback) {
   var self = this;
-  self.send("stream/ai/on/" + port, callback);
+  self.send("stream/ai/on/" + port + "?interval=" + interval, callback);
 }
 
 /***
