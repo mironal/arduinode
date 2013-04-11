@@ -749,7 +749,7 @@ String okIoJson(uint8_t port, uint8_t val){
    的なjsonを作る.
  */
 String wrapEventJson(String type, String dataJson){
-  String body = stringJson("event", type)
+  String body = stringJson("event", type) + ","
           + wrapDq("data") + ":" + dataJson;
   return wrapBrace(body);
 }
