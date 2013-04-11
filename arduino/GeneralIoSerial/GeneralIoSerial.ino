@@ -308,7 +308,7 @@ void loop() {
     if(ai_stream_info[i].interval_ms){
       if(ai_stream_info[i].counter > ai_stream_info[i].interval_ms){
         ai_stream_info[i].counter = 0;
-        Serial.println(aiRead(i));
+        Serial.println(wrapEventJson("ai", aiRead(i)));
       }
     }
   }
@@ -317,12 +317,13 @@ void loop() {
     if(di_stream_info[i].interval_ms){
       if(di_stream_info[i].counter > di_stream_info[i].interval_ms){
         di_stream_info[i].counter = 0;
-        Serial.println(diRead(i));
+        Serial.println(wrapEventJson("di", diRead(i)));
       }
     }
   }
 
 }
+
 
 String task(String msg){
   // 関数テーブルからタスクを決定する.
@@ -737,6 +738,19 @@ String okIoJson(uint8_t port, uint8_t val){
     + intJson("port", port) + ","
     + intJson("val", val);
 
+  return wrapBrace(body);
+}
+
+
+/*
+
+   {"event":"[type]", "data":{"msg":"OK", , , , }}
+
+   的なjsonを作る.
+ */
+String wrapEventJson(String type, String dataJson){
+  String body = stringJson("event", type)
+          + wrapDq("data") + ":" + dataJson;
   return wrapBrace(body);
 }
 
