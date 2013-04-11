@@ -324,11 +324,6 @@ void loop() {
 
 }
 
-String eventResponseHeader(String event){
-  return "{" + stringJson("event", event) + "," + wrapDq("datas") + ":[";
-}
-
-
 String task(String msg){
   // 関数テーブルからタスクを決定する.
   // prefixは空文字と置換される.
