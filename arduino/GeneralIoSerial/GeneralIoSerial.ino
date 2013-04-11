@@ -21,6 +21,12 @@ struct STR_UINT8_PEAR {
   uint8_t value;
 };
 
+// streamの転送間隔と時間計測に使用するカウンターの構造体.
+struct STREAM_INFO {
+  uint64_t interval_ms;
+  uint64_t counter;
+};
+
 /**************************************************************************
                        ボード毎の違いを吸収するｱﾚ
 **************************************************************************/
@@ -54,13 +60,6 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
 // D0 - D13
 #define DI_MAX_PORT_NUM 14
 
-struct STREAM_INFO {
-  uint64_t interval_ms;
-  uint64_t counter;
-};
-
-volatile struct STREAM_INFO ai_stream_info[AI_MAX_PORT_NUM];
-volatile struct STREAM_INFO di_stream_info[DI_MAX_PORT_NUM];
 
 // AI Reference電圧の名前と値を保持するテーブル.
 const struct STR_UINT8_PEAR AI_REF_TBL[] = {
@@ -69,55 +68,6 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
   {"EXTERNAL", EXTERNAL}
 };
 
-// 24時間のmsec表現
-
-// タイマ割り込み
-volatile uint32_t timer2_tcnt2 = 0;
-
-void timer2Start(){
-  float prescaler = 0.0;
-
-  TIMSK2 &= ~(1<<TOIE2);
-  TCCR2A &= ~((1<<WGM21) | (1<<WGM20));
-  TCCR2B &= ~(1<<WGM22);
-  ASSR &= ~(1<<AS2);
-  TIMSK2 &= ~(1<<OCIE2A);
-
-  if ((F_CPU >= 1000000UL) && (F_CPU <= 16000000UL)) {  // prescaler set to 64
-    TCCR2B |= (1<<CS22);
-    TCCR2B &= ~((1<<CS21) | (1<<CS20));
-    prescaler = 64.0;
-  } else if (F_CPU < 1000000UL) { // prescaler set to 8
-    TCCR2B |= (1<<CS21);
-    TCCR2B &= ~((1<<CS22) | (1<<CS20));
-    prescaler = 8.0;
-  } else { // F_CPU > 16Mhz,  prescaler set to 128
-    TCCR2B |= ((1<<CS22) | (1<<CS20));
-    TCCR2B &= ~(1<<CS21);
-    prescaler = 128.0;
-  }
-
-  timer2_tcnt2 = 256 - (int)((float)F_CPU * 0.001 / prescaler);
-
-  TCNT2 = timer2_tcnt2;
-  TIMSK2 |= (1<<TOIE2);
-}
-
-void timer2Stop(){
-  TIMSK2 &= ~(1<<TOIE2);
-}
-
-ISR(TIMER2_OVF_vect) {
-  TCNT2 = timer2_tcnt2;
-
-  int i = 0;
-  for(; i < AI_MAX_PORT_NUM; ++i){
-    ++ai_stream_info[i].counter;
-  }
-  for(i = 0; i < DI_MAX_PORT_NUM; ++i){
-    ++di_stream_info[i].counter;
-  }
-}
 #endif
 
 const prog_char ILLEGAL_COMMAND[] PROGMEM       = "Illegal command.";
@@ -134,12 +84,8 @@ const prog_char COMMAND_IS_TOO_LONG[] PROGMEM   = "Command is too long.";
 char read_buf[128];
 int buf_index = 0;
 
-// DI連続転送の有効・無効を管理する. bitが立っていると有効.
-// megaのポート数に対応するため64bitにする.
-//uint64_t di_stream_enable_ports = 0;
-
-//uint16_t ai_stream_enable_ports = 0;
-
+volatile struct STREAM_INFO ai_stream_info[AI_MAX_PORT_NUM];
+volatile struct STREAM_INFO di_stream_info[DI_MAX_PORT_NUM];
 
 // pinModeの名前と値を保持するテーブル.
 const struct STR_UINT8_PEAR PIN_MODE_TBL[] = {
@@ -804,3 +750,69 @@ String wrapChar(String str, char wrap){
 String wraped(char before, String body, char after){
   return before + body + after;
 }
+
+
+
+/**************************************************************************
+                        タイマ割り込みに関するｱﾚ
+**************************************************************************/
+
+volatile uint32_t timer2_tcnt2 = 0;
+
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644P__)
+/*******************
+  Arduino MEGAとか
+*******************/
+
+
+#else
+/*******************
+  Arduino Unoとか
+*******************/
+void timer2Start(){
+  float prescaler = 0.0;
+
+  TIMSK2 &= ~(1<<TOIE2);
+  TCCR2A &= ~((1<<WGM21) | (1<<WGM20));
+  TCCR2B &= ~(1<<WGM22);
+  ASSR &= ~(1<<AS2);
+  TIMSK2 &= ~(1<<OCIE2A);
+
+  if ((F_CPU >= 1000000UL) && (F_CPU <= 16000000UL)) {  // prescaler set to 64
+    TCCR2B |= (1<<CS22);
+    TCCR2B &= ~((1<<CS21) | (1<<CS20));
+    prescaler = 64.0;
+  } else if (F_CPU < 1000000UL) { // prescaler set to 8
+    TCCR2B |= (1<<CS21);
+    TCCR2B &= ~((1<<CS22) | (1<<CS20));
+    prescaler = 8.0;
+  } else { // F_CPU > 16Mhz,  prescaler set to 128
+    TCCR2B |= ((1<<CS22) | (1<<CS20));
+    TCCR2B &= ~(1<<CS21);
+    prescaler = 128.0;
+  }
+
+  timer2_tcnt2 = 256 - (int)((float)F_CPU * 0.001 / prescaler);
+
+  TCNT2 = timer2_tcnt2;
+  TIMSK2 |= (1<<TOIE2);
+}
+
+void timer2Stop(){
+  TIMSK2 &= ~(1<<TOIE2);
+}
+
+ISR(TIMER2_OVF_vect) {
+  TCNT2 = timer2_tcnt2;
+
+  int i = 0;
+  for(; i < AI_MAX_PORT_NUM; ++i){
+    ++ai_stream_info[i].counter;
+  }
+  for(i = 0; i < DI_MAX_PORT_NUM; ++i){
+    ++di_stream_info[i].counter;
+  }
+}
+
+
+#endif
