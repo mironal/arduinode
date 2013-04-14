@@ -63,19 +63,13 @@ var arduinode = new Arduinode(portName, function(){
     console.log("*********** init arduino ***********");
     console.log(results);
 
-    // ポートの初期化が終わったらポートの値をwebsocketでpushする.
-    // 但し、1つ以上の接続があるときのみ.
-    setInterval(function(){
-      if(numOfConnections > 0){
-        async.series(read_ai_tasks, function(err, results){
-          ws.sockets.emit("ai", results);
-        });
-
-        async.series(read_di_tasks, function(err, results){
-          ws.sockets.emit("di", results);
-        });
-      }
-    }, 1000);
+  });
+  // ポートの初期化が終わったらポートの値をwebsocketでpushする.
+  // 但し、1つ以上の接続があるときのみ.
+  arduinode.on("event", function(data){
+    if(numOfConnections > 0){
+      ws.sockets.emit("event", data);
+    }
   });
 
 });
@@ -95,32 +89,26 @@ var init_arduino_tasks = [
   function(cb){ arduinode.pinMode(10, "INPUT", cb);},
   function(cb){ arduinode.pinMode(11, "INPUT", cb);},
   function(cb){ arduinode.pinMode(12, "INPUT", cb);},
-  function(cb){ arduinode.pinMode(13, "INPUT", cb);}
-];
-
-var read_ai_tasks = [
-  function(cb){ arduinode.analogRead(0, cb); },
-  function(cb){ arduinode.analogRead(1, cb); },
-  function(cb){ arduinode.analogRead(2, cb); },
-  function(cb){ arduinode.analogRead(3, cb); },
-  function(cb){ arduinode.analogRead(4, cb); },
-  function(cb){ arduinode.analogRead(5, cb); }
-];
-
-var read_di_tasks = [
-  function(cb){ arduinode.digitalRead(0, cb); },
-  function(cb){ arduinode.digitalRead(1, cb); },
-  function(cb){ arduinode.digitalRead(2, cb); },
-  function(cb){ arduinode.digitalRead(3, cb); },
-  function(cb){ arduinode.digitalRead(4, cb); },
-  function(cb){ arduinode.digitalRead(5, cb); },
-  function(cb){ arduinode.digitalRead(6, cb); },
-  function(cb){ arduinode.digitalRead(7, cb); },
-  function(cb){ arduinode.digitalRead(8, cb); },
-  function(cb){ arduinode.digitalRead(9, cb); },
-  function(cb){ arduinode.digitalRead(10, cb); },
-  function(cb){ arduinode.digitalRead(11, cb); },
-  function(cb){ arduinode.digitalRead(12, cb); },
-  function(cb){ arduinode.digitalRead(13, cb); }
+  function(cb){ arduinode.pinMode(13, "INPUT", cb);},
+  function(cb) { arduinode.digitalStreamOn(1, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(1, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(2, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(3, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(4, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(5, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(6, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(7, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(8, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(9, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(10, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(11, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(12, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(13, 1000, cb); },
+  function(cb) { arduinode.analogStreamOn(0, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(1, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(2, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(3, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(4, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(5, 500, cb); }
 ];
 
