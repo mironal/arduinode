@@ -41,7 +41,7 @@ npm install arduinode
 ```
 ### ドキュメント
 
-[API document](doc/API.md)
+## [API document](doc/API.md)
 
 
 ### Example code
