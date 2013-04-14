@@ -11,6 +11,10 @@ var read_count = 0;
 var print = false;
 
 var arduinode = new Arduinode(portName, function(err, result){
+  if(err){
+    console.log(err);
+    process.exit(1);
+  }
 
   // Mega ADKで最初のコマンドでエラーが必ず発生するので
   // 一発ダミーリードをしてから実行する.

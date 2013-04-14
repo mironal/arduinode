@@ -4,7 +4,6 @@ var util = require('util');
 var SerialPort = require("serialport").SerialPort;
 
 var options = {
-//  baudRate: 115200,
   baudRate: 115200,
   dataBits: 8,
   parity: 'none',
@@ -58,6 +57,9 @@ function Arduinode(path, callback){
   self.buf = [];
   self.callback = callback;
 
+  self.sp.on("error", function(e){
+    self.callback(e, null);
+  });
 
   // arduinoは\r\nを返してくる.
   self.sp.on("data", function(data){
@@ -71,6 +73,9 @@ function Arduinode(path, callback){
       }else{
         var msg = new Buffer(self.buf).toString();
         try{
+          // streamのjsonが破壊されていた場合、エラーを通知する方法が現在のところ無い。
+          // streamのデータなのかなのか普通のリクエストに対するレスポンスなのかを
+          // 判別する方法が無いため.
           var json = JSON.parse(msg);
           if(json.event){
             self.emit("event", json);
@@ -85,7 +90,9 @@ function Arduinode(path, callback){
             }
           }
         }catch(e){
-          self.callback(e, null);
+          // これがベストなのか分からないが、とりあえずthrowする.
+          console.error("JSON parse error : " + e);
+          throw e;
         }
         self.buf.length = 0;
       }
