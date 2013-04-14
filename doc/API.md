@@ -33,6 +33,116 @@
 :十分にテストされた安定したAPIです。仕様が変更されることはまずありません。
 
 
+## API使用上の注意
+
+同時に複数のコマンドを送信すると正しく通信ができなくなります。
+
+これはArduinoのシリアル受信バッファサイズが小さいため、同時に複数のコマンドを送信すると受信バッファが溢れ、送信したコマンドの文字列が破壊されるためです。
+
+例えば以下の様なコードを実行すると容易にArduinoの受信バッファが溢れ、正常にコマンドを解釈できなくなります。
+
+```js
+for(var i = 0; i < 10; i++){
+  arduinode.digitalRead(i, function(err, result){
+    if(err) throw err; // 高い確率でエラーが発生します。
+    console.log(result);
+  });
+}
+```
+
+この問題を回避するために、以下の例のようにコールバック関数内で次のコマンドをArduinoに送信して下さい。
+
+```js
+arduinode.digitalRead(0, function(err, result){
+  if(err) throw err;
+  console.log(result);
+  arduinode.digitalRead(1, function(err, result){
+    if(err) throw err;
+    console.log(result);
+  });
+});
+```
+
+但しこのように記述するのはあまりにも大変です。
+
+そこでasyncモジュールを使うことで簡単に記述する方法を紹介します。
+
+```hs
+npm install async
+```
+
+してasyncモジュールを取得して下さい。
+
+以下にforを使ったコード例を書き換える完全なコードを掲載します。
+
+```js
+"use strict";
+var async = require("async");
+var Arduinode = require("arduinode").Arduinode;
+
+// Your serial port name.
+var portname = "/dev/tty.usbmodem1411";
+
+var arduinode = new Arduinode(portname, function(err, result){
+  var i = 0;
+  async.whilst(
+    // この関数が条件を満たすまで
+    function(){ return i < 10;},
+
+    // この関数を実行し続ける(errが発生したらその時点で終了).
+    function(callback){
+      arduinode.digitalRead(i, function(err, result){
+        console.log(result);
+        i++;
+        callback(err);
+      });
+    },
+
+    // 最後に１回呼ばれる.
+    function(err){
+      if(err){
+        console.log(err);
+      }
+      arduinode.close(function(){
+        console.log("exit");
+      });
+    });
+});
+```
+
+また、各結果に名前を付けて以下のように書くことも出来ます。こちらのほうがオススメです。
+
+```js
+var arduinode = new Arduinode(portname, function(err, result){
+  var tasks = {
+    ai0: function(callback){
+      arduinode.analogRead(0, callback);
+    },
+    ai1: function(callback){
+      arduinode.analogRead(1, callback);
+    },
+    ai2: function(callback){
+      arduinode.analogRead(1, callback);
+    }
+  };
+
+  async.series(tasks, function(err, results){
+    if(err){
+      console.log(err);
+    }
+    console.log(results.ai0);
+    console.log(results.ai1);
+    console.log(results.ai2);
+
+    arduinode.close(function(){
+      console.log("exit");
+    });
+
+  });
+});
+```
+
+
 # コンストラクタ <a name="Arduinode">
 
 ### Sample code
