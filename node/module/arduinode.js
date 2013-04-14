@@ -4,6 +4,7 @@ var util = require('util');
 var SerialPort = require("serialport").SerialPort;
 
 var options = {
+//  baudRate: 115200,
   baudRate: 115200,
   dataBits: 8,
   parity: 'none',
@@ -55,17 +56,12 @@ function Arduinode(path, callback){
   var self = this;
   self.sp = new SerialPort(path, options);
   self.buf = [];
-  self.callback = [];
-  self.error = null;
+  self.callback = callback;
 
-  self.once("ready", callback);
-
-  self.sp.on("error", function(e){
-    self.emit("ready", e, null);
-  });
 
   // arduinoは\r\nを返してくる.
   self.sp.on("data", function(data){
+
     for(var i = 0; i < data.length; i++){
       if( data[i] != 10){
         // \rは無視する.
@@ -73,30 +69,25 @@ function Arduinode(path, callback){
           self.buf.push(data[i]);
         }
       }else{
-        var received = new Buffer(self.buf).toString();
-        if(received === "READY"){
-          self.emit("ready", null, "ready");
-        }else{
-          var result = JSON.parse(received);
-          // eventってデータが含まれてたらemit
-          if(result.event){
-            self.emit("event", result);
+        var msg = new Buffer(self.buf).toString();
+        try{
+          var json = JSON.parse(msg);
+          if(json.event){
+            self.emit("event", json);
           }else{
-            var cb = self.callback.shift();
-            if(typeof(cb) == "function"){
-              if(result.msg == "NG"){
+            if(json.msg == "NG"){
                 var error = new Error();
                 error.name = "Command error.";
-                error.message = result.error;
-                cb(error, result);
-              }else{
-                cb(self.error, JSON.parse(received));
-              }
-              self.errro = null;
+                error.message = json.error;
+                self.callback(error, json);
+            }else{
+              self.callback(null, json);
             }
           }
+        }catch(e){
+          self.callback(e, null);
         }
-        self.buf = [];
+        self.buf.length = 0;
       }
     }
   });
@@ -113,7 +104,7 @@ util.inherits(Arduinode, SerialPort);
 Arduinode.prototype.send = function(cmd, callback) {
   var self = this;
   if(cmd.length < 100){
-    self.callback.push(callback);
+    self.callback = callback;
     self._write(cmd,null);
   }else{
     // Arduinoのバッファがあふれるようなサイズのコマンドは
@@ -862,7 +853,7 @@ Arduinode.prototype._write = function(cmd, callback){
       var error = new Error();
       error.name = "Send error.";
       error.message = "Write bytes mismatch."
-    throw error;
+      throw error;
     }
     if(callback){
       callback();

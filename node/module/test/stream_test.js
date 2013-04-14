@@ -72,8 +72,11 @@ var arduinode = new Arduinode(portName, function(err, result){
     tasks = _.flatten(tasks);
     if(tasks.length > 0){
       async.series(tasks, function(err, results){
-        if(err) throw err;
-        console.log(results);
+        if(err){
+          console.log(err);
+        }else{
+          console.log(results);
+        }
       });
     }
 

@@ -30,17 +30,22 @@ struct STREAM_INFO {
 /**************************************************************************
                        ボード毎の違いを吸収するｱﾚ
 **************************************************************************/
-
+// Arduion Uno       : ATmega328P
+// Arduino ADK       : ATmega2560
+// Arduino Mega 2560 : ATmega2560
+// Arduino 古いやつ  : ATmega168
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644P__)
 /*******************
   Arduino MEGAとか
 *******************/
+#define AI_MAX_PORT_NUM 6
+#define DI_MAX_PORT_NUM 14
 
 // A0 - A15
-#define AI_MAX_PORT_NUM 16
+//#define AI_MAX_PORT_NUM 16
 
 // D0 - D49
-#define DI_MAX_PORT_NUM 50
+//#define DI_MAX_PORT_NUM 50
 
 // AI Reference電圧の名前と値を保持するテーブル.
 const struct STR_UINT8_PEAR AI_REF_TBL[] = {
@@ -188,21 +193,6 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
 
 
   /*
-    連続転送間隔設定
-    format => stream/delay?{delayMillSec}
-    {delayMillSec} => 変換間隔[msec]
-   */
-  //{"stream/delay", &setStreamDelayTask},
-
-  /*
-TODO: 紛らわしいので後で消す
-     Close serial port.
-     format => system/close
-   */
-  {"system/close", &closeSerial},
-
-
-  /*
     Reset arduino.
     node-serialportではDTR信号の制御が出来ない(多分)ため
     関数内でスタックオーバーフローを発生させることで強制的にリセットをかける。
@@ -214,20 +204,25 @@ TODO: 紛らわしいので後で消す
 
 };
 
-
-
+bool standby = true;
 
 void setup() {
   buf_index = 0;
   memset(read_buf,0,128);
-
+  standby = true;
   Serial.begin(115200);
-  Serial.println("READY");
-  pinMode(13, OUTPUT);
   timer2Start();
 }
 
+
 void loop() {
+  if(standby){
+    // Mega ADKの場合、delayを入れないとメッセージをnode側で受信できない.
+    // 原因不明
+    delay(100);
+    Serial.println(initJson());
+    standby = false;
+  }
 
   if(Serial.available() > 0){
     while(Serial.available() > 0){
@@ -583,13 +578,6 @@ String streamAiOffTask(String query){
 }
 
 
-// シリアルを閉じる.
-String closeSerial(String empty){
-  Serial.end();
-  return "";
-}
-
-
 // スタックオーバーフローにより強制的にリセット
 String resetTask(String empty){
   resetTask("");
@@ -677,7 +665,10 @@ int intPow(int base, int e){
    JSON変換関連
  */
 
-
+String initJson(){
+  String body = stringJson("msg", "READY");
+  return wrapBrace(body);
+}
 
 String okIoJson(uint8_t port, uint8_t val){
   String body = stringJson("msg", "OK") + ","
@@ -710,7 +701,7 @@ String switchTypeReturnJson(String msg, String refType){
 
 
 String NgReturnJson(const prog_char *err){
-  char buf[60] = {0};
+  char buf[30] = {0};
   strcpy_P(buf, err);
   String body = stringJson("msg", "NG") + ","
     + stringJson("error", buf);
@@ -759,19 +750,9 @@ String wraped(char before, String body, char after){
 
 volatile uint32_t timer2_tcnt2 = 0;
 
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644P__)
-/*******************
-  Arduino MEGAとか
-*******************/
-
-
-#else
-/*******************
-  Arduino Unoとか
-*******************/
 void timer2Start(){
   float prescaler = 0.0;
-
+#if defined (__AVR_ATmega168__) || defined (__AVR_ATmega328P__) || defined(__AVR_ATmega1280__) || defined (__AVR_ATmega2560__)
   TIMSK2 &= ~(1<<TOIE2);
   TCCR2A &= ~((1<<WGM21) | (1<<WGM20));
   TCCR2B &= ~(1<<WGM22);
@@ -782,11 +763,11 @@ void timer2Start(){
     TCCR2B |= (1<<CS22);
     TCCR2B &= ~((1<<CS21) | (1<<CS20));
     prescaler = 64.0;
-  } else if (F_CPU < 1000000UL) { // prescaler set to 8
+  } else if (F_CPU < 1000000UL) {  // prescaler set to 8
     TCCR2B |= (1<<CS21);
     TCCR2B &= ~((1<<CS22) | (1<<CS20));
     prescaler = 8.0;
-  } else { // F_CPU > 16Mhz,  prescaler set to 128
+  } else { // F_CPU > 16Mhz, prescaler set to 128
     TCCR2B |= ((1<<CS22) | (1<<CS20));
     TCCR2B &= ~(1<<CS21);
     prescaler = 128.0;
@@ -796,14 +777,19 @@ void timer2Start(){
 
   TCNT2 = timer2_tcnt2;
   TIMSK2 |= (1<<TOIE2);
+#endif
 }
 
 void timer2Stop(){
+#if defined (__AVR_ATmega168__) || defined (__AVR_ATmega328P__) || defined(__AVR_ATmega1280__) || defined (__AVR_ATmega2560__)
   TIMSK2 &= ~(1<<TOIE2);
+#endif
 }
 
 ISR(TIMER2_OVF_vect) {
   TCNT2 = timer2_tcnt2;
+  // MEGAとかだとシリアル読みこぼしが発生するので、ここで割り込みを許可しておく.
+  sei();
 
   int i = 0;
   for(; i < AI_MAX_PORT_NUM; ++i){
@@ -814,5 +800,3 @@ ISR(TIMER2_OVF_vect) {
   }
 }
 
-
-#endif
