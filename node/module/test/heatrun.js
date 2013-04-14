@@ -5,8 +5,12 @@ var Arduinode = require("../arduinode").Arduinode;
 
 var portName = "/dev/tty.usbmodem1411";
 
-var arduinode = new Arduinode(portName, function(err, result){
+var event_count = 0;
+var error_count = 0;
+var read_count = 0;
+var print = false;
 
+var arduinode = new Arduinode(portName, function(err, result){
 
   // Mega ADKで最初のコマンドでエラーが必ず発生するので
   // 一発ダミーリードをしてから実行する.
@@ -14,39 +18,31 @@ var arduinode = new Arduinode(portName, function(err, result){
     heatrun();
   });
 
-
-  var event_count = 0;
   arduinode.on("event", function(data){
     event_count++;
-    console.log("******** event : " + event_count + "*********");
-    console.log(data);
+    if(print){
+      console.log(data);
+    }
   });
-
-
 
 });
 
 function heatrun(){
   async.series(stream_init_tasks, function(err, results){
       if(err){
-        console.log(err);
+        error_count++;
       }
       for(var i = 0; i < results.length; i++){
         console.log(results[i]);
       }
 
-      var error_count = 0;
-      var read_count = 0;
       async.forever(function(cb){
         async.series(read_tasks, function(err, results){
           if(err){
             error_count++;
-            console.log("error : " + error_count );
           }
           read_count++;
-          if((read_count % 100) == 0){
-            console.log("******** read : " + read_count + "*********");
-            console.log("error : " + error_count );
+          if(print){
             for(var i = 0; i < results.length; i++){
               console.log(results[i]);
             }
@@ -106,3 +102,16 @@ var read_tasks = [
   function(cb){ arduinode.digitalRead(13, cb); }
 ];
 
+var readline = require('readline');
+var rl = readline.createInterface(process.stdin,  process.stdout);
+
+rl.on("line", function(line){
+  console.log("read  : " + read_count);
+  console.log("event : " + event_count);
+  console.log("error : " + error_count );
+  if(print){
+    print = false;
+  }else{
+    print = true;
+  }
+});
