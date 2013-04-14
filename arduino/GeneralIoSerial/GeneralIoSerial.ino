@@ -265,7 +265,6 @@ void loop() {
 
 }
 
-
 String task(String msg){
   // 関数テーブルからタスクを決定する.
   // prefixは空文字と置換される.
@@ -299,98 +298,12 @@ String switchPinModeTask(String portWithQuery){
   for(int i = 0; i < ARRAYSIZE(PIN_MODE_TBL); i++){
     if(valQuery == PIN_MODE_TBL[i].key){
       pinMode(port, PIN_MODE_TBL[i].value);
-      return switchTypeReturnJson("OK", valQuery);
+      return switchTypeReturnJson(valQuery);
     }
   }
   return NgReturnJson(ILLEGAL_TYPE);
 }
 
-String checkHasQuery(String query, int *at){
-  *at = query.indexOf('?');
-  if(*at == -1){
-    // queryが指定されていなかったら-1で返す.
-    return NgReturnJson(QUERY_NOT_FOUND);
-  }
-  return NULL;
-}
-
-String checkPortWithQuery(String portWithQuery, uint8_t *port, String *query){
-
-  int at = 0;
-  String error = checkHasQuery(portWithQuery, &at);
-  if(error){
-    return error;
-  }
-
-  String portQuery = portWithQuery.substring(0, at);
-  if(!isInt(portQuery)){
-    return NgReturnJson(ILLEGAL_PORT_NUMBER);
-  }
-  *port = strToInt(portQuery);
-  *query = portWithQuery.substring(at + 1);
-
-  return NULL;
-}
-
-
-// {port}?interval={msec}なクエリーを分解.
-String checkPortWithInterval(String portWithInterval, uint8_t *port, uint64_t *interval){
-
-  String intervalQuery;
-
-  String error = checkPortWithQuery(portWithInterval, port, &intervalQuery);
-  if(error){
-    return error;
-  }
-
-  // intervalが指定されていなかったらintervalを1にする.
-  if(intervalQuery.startsWith("interval=")){
-    intervalQuery.replace("interval=", "");
-    // intervalに整数以外が指定されていたらエラー
-    if(isInt(intervalQuery)){
-      *interval = strToUInt64(intervalQuery);
-      // 0はサンプリング停止なので1に書き換える.
-      if(*interval == 0){
-        *interval = 1;
-      }
-    }else{
-      return NgReturnJson(ILLEGAL_VALUE);
-    }
-  }else{
-    *interval = 1;
-  }
-  return NULL;
-}
-
-String checkPortWithValue(String portWithValue, uint8_t *port, int *val){
-
-  String valQuery;
-
-  String error = checkPortWithQuery(portWithValue, port, &valQuery);
-
-  if(error){
-    return error;
-  }
-
-  if(valQuery.startsWith("val=")){
-    valQuery.replace("val=","");
-  }else{
-    return NgReturnJson(VAL_IS_NOT_SPECIFIED);
-  }
-
-  // HIGH, LOWのチェックはdoWriteTask用
-  if(valQuery == "HIGH"){
-    *val = 1;
-  }else if(valQuery == "LOW"){
-    *val = 0;
-  }else if(isInt(valQuery)){
-    *val = strToInt(valQuery);
-  }else{
-    return NgReturnJson(ILLEGAL_VALUE);
-  }
-
-  return NULL;
-}
 
 /*
    {port_num}?val={value}
@@ -467,8 +380,6 @@ String aiRead(uint8_t port){
   return okIoJson(port, val);
 }
 
-
-
 /*
    AIリファレンス電圧切替.
  */
@@ -482,7 +393,7 @@ String aiRefSwitchTask(String ref){
   for(int i = 0; i < ARRAYSIZE(AI_REF_TBL); i++){
     if(ref.endsWith(AI_REF_TBL[i].key)){
       analogReference(AI_REF_TBL[i].value);
-      return switchTypeReturnJson("OK", AI_REF_TBL[i].key);
+      return switchTypeReturnJson(AI_REF_TBL[i].key);
     }
   }
   ref.replace("?type=", "");
@@ -692,8 +603,8 @@ String wrapEventJson(String type, String dataJson){
 }
 
 
-String switchTypeReturnJson(String msg, String refType){
-  String body = stringJson("msg", msg) + ","
+String switchTypeReturnJson(String refType){
+  String body = stringJson("msg", "OK") + ","
     + stringJson("type", refType);
 
   return wrapBrace(body);
@@ -742,6 +653,95 @@ String wraped(char before, String body, char after){
   return before + body + after;
 }
 
+/*
+   queryのエラーチェックを行う奴
+ */
+
+String checkHasQuery(String query, int *at){
+  *at = query.indexOf('?');
+  if(*at == -1){
+    // queryが指定されていなかったら-1で返す.
+    return NgReturnJson(QUERY_NOT_FOUND);
+  }
+  return NULL;
+}
+String checkPortWithQuery(String portWithQuery, uint8_t *port, String *query){
+
+  int at = 0;
+  String error = checkHasQuery(portWithQuery, &at);
+  if(error){
+    return error;
+  }
+
+  String portQuery = portWithQuery.substring(0, at);
+  if(!isInt(portQuery)){
+    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  }
+  *port = strToInt(portQuery);
+  *query = portWithQuery.substring(at + 1);
+
+  return NULL;
+}
+
+
+// {port}?interval={msec}なクエリーを分解.
+String checkPortWithInterval(String portWithInterval, uint8_t *port, uint64_t *interval){
+
+  String intervalQuery;
+
+  String error = checkPortWithQuery(portWithInterval, port, &intervalQuery);
+  if(error){
+    return error;
+  }
+
+  // intervalが指定されていなかったらintervalを1にする.
+  if(intervalQuery.startsWith("interval=")){
+    intervalQuery.replace("interval=", "");
+    // intervalに整数以外が指定されていたらエラー
+    if(isInt(intervalQuery)){
+      *interval = strToUInt64(intervalQuery);
+      // 0はサンプリング停止なので1に書き換える.
+      if(*interval == 0){
+        *interval = 1;
+      }
+    }else{
+      return NgReturnJson(ILLEGAL_VALUE);
+    }
+  }else{
+    *interval = 1;
+  }
+  return NULL;
+}
+
+String checkPortWithValue(String portWithValue, uint8_t *port, int *val){
+
+  String valQuery;
+
+  String error = checkPortWithQuery(portWithValue, port, &valQuery);
+
+  if(error){
+    return error;
+  }
+
+  if(valQuery.startsWith("val=")){
+    valQuery.replace("val=","");
+  }else{
+    return NgReturnJson(VAL_IS_NOT_SPECIFIED);
+  }
+
+  // HIGH, LOWのチェックはdoWriteTask用
+  if(valQuery == "HIGH"){
+    *val = 1;
+  }else if(valQuery == "LOW"){
+    *val = 0;
+  }else if(isInt(valQuery)){
+    *val = strToInt(valQuery);
+  }else{
+    return NgReturnJson(ILLEGAL_VALUE);
+  }
+
+  return NULL;
+}
 
 
 /**************************************************************************
