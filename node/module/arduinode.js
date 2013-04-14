@@ -45,7 +45,7 @@ var Arduinode = require("arduinode").Arduinode;
 var portname = "Your serial port name";
 
 var arduinode = new Arduinode(portname, function(err, result){
-  if(err) throw err; // can't open.
+  if(err) throw err;
   console.log(result);
 });
 ```
@@ -504,7 +504,7 @@ Arduinode.prototype.pinMode = function(port, type, callback) {
 
 # Stream(連続転送) API <a name="stream">
 
-リクエストを送らずにDIやAIの値を取得することが出来ます。
+リクエストを送らずにDIやAIの指定したポートの値を指定した間隔(msec)で取得することが出来ます。
 
 Arduinoから送られてきたDIやAIの値は"event"というイベントに通知されるので、以下の様なコードで値を取得することが出来ます。
 
