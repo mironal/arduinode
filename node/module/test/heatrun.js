@@ -44,8 +44,9 @@ function heatrun(){
             console.log("error : " + error_count );
           }
           read_count++;
-          if((read_count % 1000) == 0){
+          if((read_count % 100) == 0){
             console.log("******** read : " + read_count + "*********");
+            console.log("error : " + error_count );
             for(var i = 0; i < results.length; i++){
               console.log(results[i]);
             }
@@ -60,26 +61,26 @@ function heatrun(){
 
 var stream_init_tasks = [
   function(cb) { arduinode.digitalRead(0, cb); }, // Mega用ダミーコマンド
-  function(cb) { arduinode.digitalStreamOn(0, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(1, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(2, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(3, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(4, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(5, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(6, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(7, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(8, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(9, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(10, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(11, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(12, 1000, cb); },
-  function(cb) { arduinode.digitalStreamOn(13, 1000, cb); },
-  function(cb) { arduinode.analogStreamOn(0, 1000, cb); },
-  function(cb) { arduinode.analogStreamOn(1, 1000, cb); },
-  function(cb) { arduinode.analogStreamOn(2, 1000, cb); },
-  function(cb) { arduinode.analogStreamOn(3, 1000, cb); },
-  function(cb) { arduinode.analogStreamOn(4, 1000, cb); },
-  function(cb) { arduinode.analogStreamOn(5, 1000, cb); }
+  function(cb) { arduinode.digitalStreamOn(0, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(1, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(2, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(3, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(4, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(5, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(6, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(7, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(8, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(9, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(10, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(11, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(12, 500, cb); },
+  function(cb) { arduinode.digitalStreamOn(13, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(0, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(1, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(2, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(3, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(4, 500, cb); },
+  function(cb) { arduinode.analogStreamOn(5, 500, cb); }
 ];
 
 var read_tasks = [
