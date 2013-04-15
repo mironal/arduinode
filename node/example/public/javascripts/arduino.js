@@ -1,24 +1,25 @@
 $(function(){
   var socket = io.connect("http://localhost");
 
-  socket.on("ai",  function (datas) {
-    _.each(datas, function(data){
-      apply_value($("#a" + data.port), data.val);
-    });
+  socket.on("event", function(data){
+    var type = data.event;
+    var port = data.data.port;
+    var value = data.data.val;
+    switch(type){
+      case "ai":
+        apply_value("#a" + port, value);
+        break;
+      case "di":
+        apply_value("#d" + port, value);
+        break;
+      default:
+        console.log("Unkown type.");
+    }
   });
 
-  socket.on("di", function(datas){
-    _.each(datas, function(data){
-      apply_value($("#d" + data.port), data.val);
-    });
-  });
 
-  socket.on("open", function(data){
-    console.log("open");
-    console.log(data);
-  });
-
-  var apply_value = function(div, val){
+  var apply_value = function(selector, val){
+    var div = $(selector);
     var old_val = div.text();
     div.text(val);
     if(old_val != val){

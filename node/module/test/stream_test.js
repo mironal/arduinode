@@ -11,6 +11,7 @@ program.version("0.0.1")
   .option("-s, --serial [name]", "Serial port name.", "/dev/tty.usbmodem1411")
   .option("-d, --digital <ports>", "Digital stream test. -d 1,2,3", list)
   .option("-a, --analog <ports>", "Analog stream test. -a 1,2,3", list)
+  .option("-i, --interval [msec]", "Sampling interval.", parseInt)
   .parse(process.argv);
 
 var Arduinode = require("../arduinode").Arduinode;
@@ -36,31 +37,46 @@ var arduinode = new Arduinode(portName, function(err, result){
       });
     }
 
+    if(!program.interval){
+      arduinode.close(function(){
+        program.outputHelp();
+        process.exit(1);
+      });
+    }
+
+    var interval = program.interval;
+
+
+    var tasks = [];
+
     if(program.analog){
       var ports = program.analog;
-      var tasks = _.map(ports, function(p){
+      var aiTasks = _.map(ports, function(p){
         return function(cb){
-          arduinode.analogStreamOn(p, cb);
+          arduinode.analogStreamOn(p, interval, cb);
         }
       });
-      async.series(tasks, function(err, results){
-        if(err) throw err;
-        console.log("analogStreamOn");
-        console.log(results);
-      });
+      tasks.push(aiTasks);
     }
 
     if(program.digital){
       var ports = program.digital;
-      var tasks = _.map(ports, function(p){
+      var diTasks = _.map(ports, function(p){
         return function(cb){
-          arduinode.digitalStreamOn(p, cb);
+          arduinode.digitalStreamOn(p, interval, cb);
         }
       });
+      tasks.push(diTasks);
+    }
+
+    tasks = _.flatten(tasks);
+    if(tasks.length > 0){
       async.series(tasks, function(err, results){
-        if(err) throw err;
-        console.log("digitalStreamOn");
-        console.log(results);
+        if(err){
+          console.log(err);
+        }else{
+          console.log(results);
+        }
       });
     }
 
@@ -71,11 +87,11 @@ arduinode.on("event", function(data){
   switch(data.event){
     case "di":
       console.log("************** Digital stream event. **************");
-      console.log(data.datas);
+      console.log(data.data);
       break;
     case "ai":
       console.log("************** Analog stream event. **************");
-      console.log(data.datas);
+      console.log(data.data);
       break;
     default:
       console.log("Unkown event.");
