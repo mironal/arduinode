@@ -41,7 +41,7 @@ npm install arduinode
 ```
 ### ドキュメント
 
-[API document](doc/API.md)
+**[API document を見る！](doc/API.md)**
 
 
 ### Example code
@@ -62,7 +62,7 @@ arduinode = new Arduinode(portName, function(){
 
 ### Example application
 
-[Come here!](node/example/Readme.md)
+**[Come here!](node/example/Readme.md)**
 
 
 # どのように操作が出来るのか？

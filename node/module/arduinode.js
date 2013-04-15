@@ -29,6 +29,116 @@ var options = {
 3.固定
 :十分にテストされた安定したAPIです。仕様が変更されることはまずありません。
 
+
+## API使用上の注意
+
+同時に複数のコマンドを送信すると正しく通信ができなくなります。
+
+これはArduinoのシリアル受信バッファサイズが小さいため、同時に複数のコマンドを送信すると受信バッファが溢れ、送信したコマンドの文字列が破壊されるためです。
+
+例えば以下の様なコードを実行すると容易にArduinoの受信バッファが溢れ、正常にコマンドを解釈できなくなります。
+
+```js
+for(var i = 0; i < 10; i++){
+  arduinode.digitalRead(i, function(err, result){
+    if(err) throw err; // 高い確率でエラーが発生します。
+    console.log(result);
+  });
+}
+```
+
+この問題を回避するために、以下の例のようにコールバック関数内で次のコマンドをArduinoに送信して下さい。
+
+```js
+arduinode.digitalRead(0, function(err, result){
+  if(err) throw err;
+  console.log(result);
+  arduinode.digitalRead(1, function(err, result){
+    if(err) throw err;
+    console.log(result);
+  });
+});
+```
+
+但しこのように記述するのはあまりにも大変です。
+
+そこでasyncモジュールを使うことで簡単に記述する方法を紹介します。
+
+```hs
+npm install async
+```
+
+してasyncモジュールを取得して下さい。
+
+以下にforを使ったコード例を書き換える完全なコードを掲載します。
+
+```js
+"use strict";
+var async = require("async");
+var Arduinode = require("arduinode").Arduinode;
+
+// Your serial port name.
+var portname = "/dev/tty.usbmodem1411";
+
+var arduinode = new Arduinode(portname, function(err, result){
+  var i = 0;
+  async.whilst(
+    // この関数が条件を満たすまで
+    function(){ return i < 10;},
+
+    // この関数を実行し続ける(errが発生したらその時点で終了).
+    function(callback){
+      arduinode.digitalRead(i, function(err, result){
+        console.log(result);
+        i++;
+        callback(err);
+      });
+    },
+
+    // 最後に１回呼ばれる.
+    function(err){
+      if(err){
+        console.log(err);
+      }
+      arduinode.close(function(){
+        console.log("exit");
+      });
+    });
+});
+```
+
+また、各結果に名前を付けて以下のように書くことも出来ます。こちらのほうがオススメです。
+
+```js
+var arduinode = new Arduinode(portname, function(err, result){
+  var tasks = {
+    ai0: function(callback){
+      arduinode.analogRead(0, callback);
+    },
+    ai1: function(callback){
+      arduinode.analogRead(1, callback);
+    },
+    ai2: function(callback){
+      arduinode.analogRead(1, callback);
+    }
+  };
+
+  async.series(tasks, function(err, results){
+    if(err){
+      console.log(err);
+    }
+    console.log(results.ai0);
+    console.log(results.ai1);
+    console.log(results.ai2);
+
+    arduinode.close(function(){
+      console.log("exit");
+    });
+
+  });
+});
+```
+
 */
 
 /***
@@ -44,7 +154,7 @@ var Arduinode = require("arduinode").Arduinode;
 var portname = "Your serial port name";
 
 var arduinode = new Arduinode(portname, function(err, result){
-  if(err) throw err; // can't open.
+  if(err) throw err;
   console.log(result);
 });
 ```
@@ -55,17 +165,15 @@ function Arduinode(path, callback){
   var self = this;
   self.sp = new SerialPort(path, options);
   self.buf = [];
-  self.callback = [];
-  self.error = null;
-
-  self.once("ready", callback);
+  self.callback = callback;
 
   self.sp.on("error", function(e){
-    self.emit("ready", e, null);
+    self.callback(e, null);
   });
 
   // arduinoは\r\nを返してくる.
   self.sp.on("data", function(data){
+
     for(var i = 0; i < data.length; i++){
       if( data[i] != 10){
         // \rは無視する.
@@ -73,30 +181,30 @@ function Arduinode(path, callback){
           self.buf.push(data[i]);
         }
       }else{
-        var received = new Buffer(self.buf).toString();
-        if(received === "READY"){
-          self.emit("ready", null, "ready");
-        }else{
-          var result = JSON.parse(received);
-          // eventってデータが含まれてたらemit
-          if(result.event){
-            self.emit("event", result);
+        var msg = new Buffer(self.buf).toString();
+        try{
+          // streamのjsonが破壊されていた場合、エラーを通知する方法が現在のところ無い。
+          // streamのデータなのかなのか普通のリクエストに対するレスポンスなのかを
+          // 判別する方法が無いため.
+          var json = JSON.parse(msg);
+          if(json.event){
+            self.emit("event", json);
           }else{
-            var cb = self.callback.shift();
-            if(typeof(cb) == "function"){
-              if(result.msg == "NG"){
-                var error = new Error();
-                error.name = "Command error.";
-                error.message = result.error;
-                cb(error, result);
-              }else{
-                cb(self.error, JSON.parse(received));
-              }
-              self.errro = null;
+            if(json.msg == "NG"){
+              var error = new Error();
+              error.name = "Command error.";
+              error.message = json.error;
+              self.callback(error, json);
+            }else{
+              self.callback(null, json);
             }
           }
+        }catch(e){
+          // これがベストなのか分からないが、とりあえずthrowする.
+          console.error("JSON parse error : " + e);
+          throw e;
         }
-        self.buf = [];
+        self.buf.length = 0;
       }
     }
   });
@@ -113,7 +221,7 @@ util.inherits(Arduinode, SerialPort);
 Arduinode.prototype.send = function(cmd, callback) {
   var self = this;
   if(cmd.length < 100){
-    self.callback.push(callback);
+    self.callback = callback;
     self._write(cmd,null);
   }else{
     // Arduinoのバッファがあふれるようなサイズのコマンドは
@@ -513,16 +621,58 @@ Arduinode.prototype.pinMode = function(port, type, callback) {
 
 # Stream(連続転送) API <a name="stream">
 
-リクエストを送らずにDIやAIの値を取得することが出来ます。
+リクエストを送らずにDIやAIの指定したポートの値を指定した間隔(msec)で取得することが出来ます。
 
 Arduinoから送られてきたDIやAIの値は"event"というイベントに通知されるので、以下の様なコードで値を取得することが出来ます。
 
 ```js
-arduinode.on("event", function(datas){
- //datasはデータの配列.
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
+
+コールバック関数のdataに格納されている情報は以下の様なJSONになっています。
+
+```js
+{"event":"[type]", "data":[dataJson]}
+```
+
+[type]はイベントの種類を表します。
+
+AI読み取りなら"ai"が、DI読み取りなら"di"が格納されています。
+
+[dataJson]はそのイベントで読み取られた情報が格納されています。
+
+AIならanalogRead()を実行した時のレスポンスと同じ内容が、DIならdigitalRead()を実行した時のレスポンスと同じ内容のJSONが格納されています。
+
+例えばAI0の読み取り時に発生するeventのdataは以下のようになります(但しvalは環境により変わります。
+
+```js
+{"event":"ai", "data":{"msg":"OK", "port":0, "val":100}}
+```
+
+AI、DIに関わらず、同一のイベントが発生するので必要に応じて条件分岐をする必要があります。
+
+```js
+arduinode.on("event", function(data){
+  switch(data.event){
+    case "di":
+      console.log("************** Digital stream event. **************");
+      console.log(data.data);
+      break;
+    case "ai":
+      console.log("************** Analog stream event. **************");
+      console.log(data.data);
+      break;
+    default:
+      console.log("Unkown event.");
+  }
+});
+```
+
+
+但し、これは将来より簡潔に記述するためのAPIを提供する予定です。
+
 
 ※ Stream APIの仕様は将来変更される可能性があります。
 
@@ -537,33 +687,37 @@ arduinode.on("event", function(datas){
 ### API
 
 ```js
-digitalStreamOn(port, callback);
+digitalStreamOn(port, interval, callback);
 ```
 
 ### Sample code
 
 ```js
 var port = 0;
-arduinode.digitalStreamOn(port, function(err, result){
+var interval = 500; // 500[ms]
+arduinode.digitalStreamOn(port, interval, function(err, result){
   if(err) throw err;
   console.log(result);
   // {"msg":"OK", "port":0, "val":1}
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-stream/di/on/[port]
+stream/di/on/[port]?interval=[interval]
 ```
 
 [port]
 :ポート番号
+
+[interval]
+:転送間隔
 
 ### レスポンス(node.js <- Arduino)
 
@@ -576,9 +730,9 @@ stream/di/on/[port]
 実験的
 
 */
-Arduinode.prototype.digitalStreamOn = function(port, callback) {
+Arduinode.prototype.digitalStreamOn = function(port, interval, callback) {
   var self = this;
-  self.send("stream/di/on/" + port, callback);
+  self.send("stream/di/on/" + port + "?interval=" + interval, callback);
 }
 
 
@@ -622,8 +776,8 @@ arduinode.digitalStreamOff(port, function(err, result){
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
@@ -645,17 +799,20 @@ Arduinode.prototype.digitalStreamOff = function(port, callback) {
 ### API
 
 ```js
-analogStreamOn(port, callback);
+analogStreamOn(port, interval, callback);
 ```
 
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-stream/ai/on/[port]
+stream/ai/on/[port]?interval=[interval]
 ```
 
 [port]
 :ポート番号
+
+[interval]
+:転送間隔
 
 ### レスポンス(node.js <- Arduino)
 
@@ -667,15 +824,16 @@ stream/ai/on/[port]
 
 ```js
 var port = 0;
-arduinode.analogStreamOn(port, function(err, result){
+var interval = 1000; // 1000[ms] = 1[s]
+arduinode.analogStreamOn(port, interval, function(err, result){
   if(err) throw err;
   console.log(result);
   // {"msg":"OK", "port":0, "val":1}
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
@@ -684,9 +842,9 @@ arduinode.on("event", function(datas){
 実験的
 
 */
-Arduinode.prototype.analogStreamOn = function(port, callback) {
+Arduinode.prototype.analogStreamOn = function(port, interval, callback) {
   var self = this;
-  self.send("stream/ai/on/" + port, callback);
+  self.send("stream/ai/on/" + port + "?interval=" + interval, callback);
 }
 
 /***
@@ -711,8 +869,8 @@ arduinode.analogStreamOff(port, function(err, result){
 });
 
 // data event. (experimental)
-arduinode.on("event", function(datas){
-  console.log(datas);
+arduinode.on("event", function(data){
+  console.log(data);
 });
 ```
 
@@ -812,7 +970,7 @@ Arduinode.prototype._write = function(cmd, callback){
       var error = new Error();
       error.name = "Send error.";
       error.message = "Write bytes mismatch."
-    throw error;
+      throw error;
     }
     if(callback){
       callback();
