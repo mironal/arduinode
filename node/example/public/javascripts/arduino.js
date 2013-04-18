@@ -1,5 +1,5 @@
 $(function(){
-  var socket = io.connect("http://localhost");
+  var socket = io.connect(document.URL);
 
   socket.on("event", function(data){
     var type = data.event;
