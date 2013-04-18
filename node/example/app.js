@@ -90,7 +90,7 @@ var init_arduino_tasks = [
   function(cb){ arduinode.pinMode(11, "INPUT", cb);},
   function(cb){ arduinode.pinMode(12, "INPUT", cb);},
   function(cb){ arduinode.pinMode(13, "INPUT", cb);},
-  function(cb) { arduinode.digitalStreamOn(1, 1000, cb); },
+  function(cb) { arduinode.digitalStreamOn(0, 1000, cb); },
   function(cb) { arduinode.digitalStreamOn(1, 1000, cb); },
   function(cb) { arduinode.digitalStreamOn(2, 1000, cb); },
   function(cb) { arduinode.digitalStreamOn(3, 1000, cb); },
