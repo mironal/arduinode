@@ -2,12 +2,14 @@
 
 #define ARRAYSIZE(array) (sizeof(array) / sizeof(array[0]))
 
+#define RESULT_MSG_PTR &result_msg_buf[0]
+
 /**************************************************************************
                                 型宣言
 **************************************************************************/
 
 // 各々のコマンドに対して処理を行う関数の型
-typedef String (*TASK_FUNC_PTR)(String str);
+typedef char* (*TASK_FUNC_PTR)(String str);
 
 // コマンドの文字列の先頭の文字と処理する関数を保持する構造体
 struct TASK_FUNC {
@@ -85,9 +87,12 @@ const prog_char TYPE_IS_NOT_SPECIFIED[] PROGMEM = "type is not specified.";
 const prog_char VAL_IS_NOT_SPECIFIED[] PROGMEM  = "val is not specified.";
 const prog_char COMMAND_IS_TOO_LONG[] PROGMEM   = "Command is too long.";
 
-
+// リクエスト受信バッファ
 char read_buf[128];
 int buf_index = 0;
+
+// レスポンスバッファ
+char result_msg_buf[128];
 
 volatile struct STREAM_INFO ai_stream_info[AI_MAX_PORT_NUM];
 volatile struct STREAM_INFO di_stream_info[DI_MAX_PORT_NUM];
@@ -265,7 +270,7 @@ void loop() {
 
 }
 
-String task(String msg){
+char* task(String msg){
   // 関数テーブルからタスクを決定する.
   // prefixは空文字と置換される.
   for(int i = 0; i < ARRAYSIZE(TASK_FUNC_TBL); i++){
@@ -278,12 +283,12 @@ String task(String msg){
   return NgReturnJson(ILLEGAL_COMMAND);
 }
 
-String switchPinModeTask(String portWithQuery){
+char* switchPinModeTask(String portWithQuery){
 
   String valQuery;
   uint8_t port;
 
-  String error = checkPortWithQuery(portWithQuery, &port, &valQuery);
+  char* error = checkPortWithQuery(portWithQuery, &port, &valQuery);
 
   if(error){
     return error;
@@ -298,7 +303,9 @@ String switchPinModeTask(String portWithQuery){
   for(int i = 0; i < ARRAYSIZE(PIN_MODE_TBL); i++){
     if(valQuery == PIN_MODE_TBL[i].key){
       pinMode(port, PIN_MODE_TBL[i].value);
-      return switchTypeReturnJson(valQuery);
+      char buf[16] = {0};
+      valQuery.toCharArray(buf, ARRAYSIZE(buf));
+      return switchTypeReturnJson(buf);
     }
   }
   return NgReturnJson(ILLEGAL_TYPE);
@@ -309,25 +316,26 @@ String switchPinModeTask(String portWithQuery){
    {port_num}?val={value}
    で入ってくる.
  */
-String aoWriteTask(String portWithValue){
+char* aoWriteTask(String portWithValue){
   uint8_t port = 0;
   int val = 0;
 
-  String error = checkPortWithValue(portWithValue, &port, &val);
+  char* error = checkPortWithValue(portWithValue, &port, &val);
   if(error){
     return error;
   }
 
+  // TODO: portの範囲チェック
   analogWrite(port, val);
   return okIoJson(port, val);
 }
 
 
-String doWriteTask(String portWithValue){
+char* doWriteTask(String portWithValue){
   uint8_t port = 0;
   int val = 0;
 
-  String error = checkPortWithValue(portWithValue, &port, &val);
+  char* error = checkPortWithValue(portWithValue, &port, &val);
   if(error){
     return error;
   }
@@ -342,50 +350,46 @@ String doWriteTask(String portWithValue){
 }
 
 
-String checkPortQuery(String portQuery){
-  if(!isInt(portQuery)){
-    return NgReturnJson(ILLEGAL_PORT_NUMBER);
-  }
-  return NULL;
-}
-
-String diReadTask(String portQuery){
-  String error = checkPortQuery(portQuery);
+char* diReadTask(String portQuery){
+  char* error = checkPortQuery(portQuery);
   if(error){
     return error;
   }
   uint8_t port = strToInt(portQuery);
+  // TODO: ポートの範囲チェック
   return diRead(port);
 }
 
-String diRead(uint8_t port){
-  int val = digitalRead(port);
+char* diRead(uint8_t port){
+  uint8_t val = digitalRead(port);
   return okIoJson(port, val);
 }
 
 /*
    ai/read/以下が入ってくる.
  */
-String aiReadTask(String portQuery){
-  String error = checkPortQuery(portQuery);
+char* aiReadTask(String portQuery){
+  char* error = checkPortQuery(portQuery);
   if(error){
     return error;
   }
   uint8_t port = strToInt(portQuery);
+  // TODO: portの範囲チェック
   return aiRead(port);
 }
 
-String aiRead(uint8_t port){
-  int val = analogRead(port);
+char* aiRead(uint8_t port){
+  uint8_t val = analogRead(port);
   return okIoJson(port, val);
 }
+
 
 /*
    AIリファレンス電圧切替.
  */
-String aiRefSwitchTask(String ref){
+char* aiRefSwitchTask(String ref){
   int at = 0;
-  String error = checkHasQuery(ref, &at);
+  char* error = checkHasQuery(ref, &at);
   if(error){
     return error;
   }
@@ -401,12 +405,12 @@ String aiRefSwitchTask(String ref){
 }
 
 
-String streamDiOnTask(String portWithInterval){
+char* streamDiOnTask(String portWithInterval){
 
   uint64_t interval;
   uint8_t port;
 
-  String error = checkPortWithInterval(portWithInterval, &port, &interval);
+  char* error = checkPortWithInterval(portWithInterval, &port, &interval);
   if(error){
     return error;
   }
@@ -422,7 +426,7 @@ String streamDiOnTask(String portWithInterval){
   return okIoJson(port, 1);
 }
 
-String streamDiOffTask(String query){
+char* streamDiOffTask(String query){
 
   if(query == "all"){
     for(uint8_t i = 0; i < DI_MAX_PORT_NUM; i++){
@@ -431,7 +435,7 @@ String streamDiOffTask(String query){
     return okIoJson(0xff, 0);
   }
 
-  String error = checkPortQuery(query);
+  char* error = checkPortQuery(query);
   if(error){
     return error;
   }
@@ -445,12 +449,12 @@ String streamDiOffTask(String query){
   return okIoJson(port, 0);
 }
 
-String streamAiOnTask(String portWithInterval){
+char* streamAiOnTask(String portWithInterval){
 
   uint64_t interval;
   uint8_t port;
 
-  String error = checkPortWithInterval(portWithInterval, &port, &interval);
+  char* error = checkPortWithInterval(portWithInterval, &port, &interval);
   if(error){
     return error;
   }
@@ -465,7 +469,7 @@ String streamAiOnTask(String portWithInterval){
   return okIoJson(port, 1);
 }
 
-String streamAiOffTask(String query){
+char* streamAiOffTask(String query){
 
   if(query == "all"){
     for(uint8_t i = 0; i < AI_MAX_PORT_NUM; i++){
@@ -474,7 +478,7 @@ String streamAiOffTask(String query){
     return okIoJson(0xff, 0);
   }
 
-  String error = checkPortQuery(query);
+  char* error = checkPortQuery(query);
   if(error){
     return error;
   }
@@ -490,7 +494,7 @@ String streamAiOffTask(String query){
 
 
 // スタックオーバーフローにより強制的にリセット
-String resetTask(String empty){
+char* resetTask(String empty){
   resetTask("");
   return "";
 }
@@ -576,17 +580,22 @@ int intPow(int base, int e){
    JSON変換関連
  */
 
-String initJson(){
-  String body = stringJson("msg", "READY");
-  return wrapBrace(body);
+
+char* initJson(){
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      "{\"msg\":\"READY\"}");
+
+  return RESULT_MSG_PTR;
 }
 
-String okIoJson(uint8_t port, uint8_t val){
-  String body = stringJson("msg", "OK") + ","
-    + intJson("port", port) + ","
-    + intJson("val", val);
+char* okIoJson(uint8_t port, uint8_t val){
 
-  return wrapBrace(body);
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      "{\"msg\":\"OK\",\"port\":%d,\"val\":%d}",
+      port,
+      val);
+
+  return RESULT_MSG_PTR;
 }
 
 
@@ -596,68 +605,46 @@ String okIoJson(uint8_t port, uint8_t val){
 
    的なjsonを作る.
  */
-String wrapEventJson(String type, String dataJson){
-  String body = stringJson("event", type) + ","
-          + wrapDq("data") + ":" + dataJson;
-  return wrapBrace(body);
+char* wrapEventJson(char* type, char* dataJson){
+  // 同じバッファを参照してしまうので、一旦コピーする.
+  char buf[64] = {0};
+  strcpy(buf, dataJson);
+
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      "{\"event\":\"%s\",\"data\":%s}",
+      type,
+      buf);
+  return RESULT_MSG_PTR;
 }
 
 
-String switchTypeReturnJson(String refType){
-  String body = stringJson("msg", "OK") + ","
-    + stringJson("type", refType);
+char* switchTypeReturnJson(char* refType){
 
-  return wrapBrace(body);
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      "{\"msg\":\"OK\",\"type\":\"%s\"}",
+      refType);
+
+  return RESULT_MSG_PTR;
 }
 
 
-String NgReturnJson(const prog_char *err){
+char* NgReturnJson(const prog_char *err){
   char buf[30] = {0};
   strcpy_P(buf, err);
-  String body = stringJson("msg", "NG") + ","
-    + stringJson("error", buf);
 
-  return wrapBrace(body);
-}
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      "{\"msg\":\"NG\",\"error\":\"%s\"}",
+      buf);
 
-String boolJson(String key, bool value){
-  String str = value ? "true" : "false";
-  return wrapDq(key) + ":" + str;
-}
-
-String intJson(String key, int value){
-  return wrapDq(key) + ":" + String(value);
-}
-
-String stringJson(String key, String value){
-  return wrapDq(key) + ":" + wrapDq(value);
-}
-
-/*
-   文字列を囲んだりする奴
- */
-
-String wrapBrace(String str){
-  return wraped('{', str, '}');
-}
-
-String wrapDq(String str){
-  return wrapChar(str, '"');
-}
-
-String wrapChar(String str, char wrap){
-  return wraped(wrap, str, wrap);
-}
-
-String wraped(char before, String body, char after){
-  return before + body + after;
+  return RESULT_MSG_PTR;
 }
 
 /*
    queryのエラーチェックを行う奴
  */
 
-String checkHasQuery(String query, int *at){
+
+char* checkHasQuery(String query, int *at){
   *at = query.indexOf('?');
   if(*at == -1){
     // queryが指定されていなかったら-1で返す.
@@ -665,10 +652,18 @@ String checkHasQuery(String query, int *at){
   }
   return NULL;
 }
-String checkPortWithQuery(String portWithQuery, uint8_t *port, String *query){
+
+char* checkPortQuery(String portQuery){
+  if(!isInt(portQuery)){
+   return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  }
+  return NULL;
+}
+
+char* checkPortWithQuery(String portWithQuery, uint8_t *port, String *query){
 
   int at = 0;
-  String error = checkHasQuery(portWithQuery, &at);
+  char* error = checkHasQuery(portWithQuery, &at);
   if(error){
     return error;
   }
@@ -685,11 +680,11 @@ String checkPortWithQuery(String portWithQuery, uint8_t *port, String *query){
 
 
 // {port}?interval={msec}なクエリーを分解.
-String checkPortWithInterval(String portWithInterval, uint8_t *port, uint64_t *interval){
+char* checkPortWithInterval(String portWithInterval, uint8_t *port, uint64_t *interval){
 
   String intervalQuery;
 
-  String error = checkPortWithQuery(portWithInterval, port, &intervalQuery);
+  char* error = checkPortWithQuery(portWithInterval, port, &intervalQuery);
   if(error){
     return error;
   }
@@ -713,11 +708,11 @@ String checkPortWithInterval(String portWithInterval, uint8_t *port, uint64_t *i
   return NULL;
 }
 
-String checkPortWithValue(String portWithValue, uint8_t *port, int *val){
+char* checkPortWithValue(String portWithValue, uint8_t *port, int *val){
 
   String valQuery;
 
-  String error = checkPortWithQuery(portWithValue, port, &valQuery);
+  char* error = checkPortWithQuery(portWithValue, port, &valQuery);
 
   if(error){
     return error;
