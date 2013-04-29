@@ -40,14 +40,12 @@ struct STREAM_INFO {
 /*******************
   Arduino MEGAとか
 *******************/
-#define AI_MAX_PORT_NUM 6
-#define DI_MAX_PORT_NUM 14
 
 // A0 - A15
-//#define AI_MAX_PORT_NUM 16
+#define AI_MAX_PORT_NUM 16
 
 // D0 - D49
-//#define DI_MAX_PORT_NUM 50
+#define DI_MAX_PORT_NUM 50
 
 // AI Reference電圧の名前と値を保持するテーブル.
 const struct STR_UINT8_PEAR AI_REF_TBL[] = {
@@ -56,6 +54,7 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
   {"INTERNAL2V56", INTERNAL2V56},
   {"EXTERNAL", EXTERNAL}
 };
+
 #else
 /*******************
   Arduino Unoとか
