@@ -76,6 +76,11 @@ var connectArduino = function(){
         ws.sockets.emit("event", data);
       }
     });
+
+    arduinode.on("close", function(){
+      connectArduino();
+    });
+
   });
 
   var init_arduino_tasks = [
