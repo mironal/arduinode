@@ -165,8 +165,14 @@ var tests = [
 },
 {
   name:"DO write test. LOW",
+  cmd:"do/write/4?val=LOW",
+  expect:JSON.stringify({msg:"OK", port:4, val:0}),
+  send:false
+},
+{
+  name:"DO write test. Illegal port number.",
   cmd:"do/write/40?val=LOW",
-  expect:JSON.stringify({msg:"OK", port:40, val:0}),
+  expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
@@ -176,7 +182,7 @@ var tests = [
   send:false
 },
 {
-  name:"DO write test. Illegal port number.",
+  name:"DO write test. Illegal port number. query is val.",
   cmd:"do/write/b?val=3",
   expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false

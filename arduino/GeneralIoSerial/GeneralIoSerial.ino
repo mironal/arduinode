@@ -293,6 +293,11 @@ char* switchPinModeTask(String portWithQuery){
     return error;
   }
 
+  error = checkDigitalPortRange(port);
+  if(error){
+    return error;
+  }
+
   if(valQuery.startsWith("type=")){
     valQuery.replace("type=", "");
   }else{
@@ -324,7 +329,11 @@ char* aoWriteTask(String portWithValue){
     return error;
   }
 
-  // TODO: portの範囲チェック
+  error = checkAnalogPortRange(port);
+  if(error){
+    return error;
+  }
+
   analogWrite(port, val);
   return okIoJson(port, val);
 }
@@ -335,6 +344,11 @@ char* doWriteTask(String portWithValue){
   int val = 0;
 
   char* error = checkPortWithValue(portWithValue, &port, &val);
+  if(error){
+    return error;
+  }
+
+  error = checkDigitalPortRange(port);
   if(error){
     return error;
   }
@@ -355,7 +369,12 @@ char* diReadTask(String portQuery){
     return error;
   }
   uint8_t port = strToInt(portQuery);
-  // TODO: ポートの範囲チェック
+
+  error = checkDigitalPortRange(port);
+  if(error){
+    return error;
+  }
+
   return diRead(port);
 }
 
@@ -373,7 +392,13 @@ char* aiReadTask(String portQuery){
     return error;
   }
   uint8_t port = strToInt(portQuery);
-  // TODO: portの範囲チェック
+
+
+  error = checkAnalogPortRange(port);
+  if(error){
+    return error;
+  }
+
   return aiRead(port);
 }
 
@@ -414,8 +439,9 @@ char* streamDiOnTask(String portWithInterval){
     return error;
   }
 
-  if(port >= DI_MAX_PORT_NUM){
-    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  error = checkDigitalPortRange(port);
+  if(error){
+    return error;
   }
 
   di_stream_info[port].interval_ms = interval;
@@ -440,9 +466,11 @@ char* streamDiOffTask(String query){
   }
 
   uint8_t port = strToInt(query);
-  if(port >= DI_MAX_PORT_NUM){
-    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  error = checkDigitalPortRange(port);
+  if(error){
+    return error;
   }
+
   di_stream_info[port].interval_ms = 0;
 
   return okIoJson(port, 0);
@@ -458,8 +486,9 @@ char* streamAiOnTask(String portWithInterval){
     return error;
   }
 
-  if(port >= AI_MAX_PORT_NUM){
-    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  error = checkAnalogPortRange(port);
+  if(error){
+    return error;
   }
 
   ai_stream_info[port].interval_ms = interval;
@@ -483,9 +512,11 @@ char* streamAiOffTask(String query){
   }
 
   uint8_t port = strToInt(query);
-  if(port >= AI_MAX_PORT_NUM){
-    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  error = checkAnalogPortRange(port);
+  if(error){
+    return error;
   }
+
   ai_stream_info[port].interval_ms = 0;
 
   return okIoJson(port, 0);
@@ -736,6 +767,21 @@ char* checkPortWithValue(String portWithValue, uint8_t *port, int *val){
 
   return NULL;
 }
+
+char* checkAnalogPortRange(uint8_t port){
+  if(port < AI_MAX_PORT_NUM){
+    return NULL;
+  }
+  return NgReturnJson(ILLEGAL_PORT_NUMBER);
+}
+
+char* checkDigitalPortRange(uint8_t port){
+  if(port < DI_MAX_PORT_NUM){
+    return NULL;
+  }
+  return NgReturnJson(ILLEGAL_PORT_NUMBER);
+}
+
 
 
 /**************************************************************************
