@@ -171,6 +171,14 @@ function Arduinode(path, callback){
     self.callback(e, null);
   });
 
+  self.sp.on("end", function(){
+    self.emit("end");
+  });
+
+  self.sp.on("close", function(err, data){
+    self.emit("close");
+  });
+
   // arduinoは\r\nを返してくる.
   self.sp.on("data", function(data){
 
