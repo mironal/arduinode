@@ -403,7 +403,7 @@ char* aiReadTask(String portQuery){
 }
 
 char* aiRead(uint8_t port){
-  uint8_t val = analogRead(port);
+  uint16_t val = analogRead(port);
   return okIoJson(port, val);
 }
 
@@ -618,7 +618,7 @@ char* initJson(){
   return RESULT_MSG_PTR;
 }
 
-char* okIoJson(uint8_t port, uint8_t val){
+char* okIoJson(uint8_t port, uint16_t val){
 
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
       "{\"msg\":\"OK\",\"port\":%d,\"val\":%d}",
