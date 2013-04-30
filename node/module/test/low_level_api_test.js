@@ -203,6 +203,8 @@ describe("Arduinode low level API test", function(){
         });
         // ポート番号のチェックはしていないので
         // arduinoに存在しないポートでも一応動く.
+        // 下記コミット以降ポートチェックをするようにした.
+        // 05c847d9c026b67930158664e3f931690c7f5d0f
         describe("ai/read/10", function(){
           var err;
           var result;
@@ -213,17 +215,15 @@ describe("Arduinode low level API test", function(){
               done();
             });
           });
-          it("errがnull", function(){
-            should.not.exists(err);
+
+          it("errがnullじゃない", function(){
+            should.exists(err);
           });
-          it("msgがOK", function(){
-            result.should.have.property("msg", "OK");
+          it("errのnameがCommand error.", function(){
+            err.name.should.equal("Command error.");
           });
-          it("portが10", function(){
-            result.should.have.property("port",10);
-          });
-          it("valというプロパティがある", function(){
-            result.should.have.property("val");
+          it("errのmessageがIllegal port number..", function(){
+            err.message.should.equal("Illegal port number.");
           });
         });
       });
