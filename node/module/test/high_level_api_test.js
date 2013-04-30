@@ -69,31 +69,6 @@ describe("Arduinode high level API test", function(){
             result.should.have.property("val");
           });
         });
-        // ポート番号のチェックはしていないので
-        // arduinoに存在しないポートでも一応動く.
-        describe("port = 10", function(){
-          var err;
-          var result;
-          before(function(done){
-            arduinode.analogRead(10, function(e, r){
-              err = e;
-              result = r;
-              done();
-            });
-          });
-          it("errがnull", function(){
-            should.not.exists(err);
-          });
-          it("msgがOK", function(){
-            result.should.have.property("msg", "OK");
-          });
-          it("portが10", function(){
-            result.should.have.property("port",10);
-          });
-          it("valというプロパティがある", function(){
-            result.should.have.property("val");
-          });
-        });
       });
     });
 
