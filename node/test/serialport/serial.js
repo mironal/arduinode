@@ -75,127 +75,127 @@ var tests = [
 },
 {
   name:"AO write test.",
-  cmd:"ao/write/3?val=25",
+  cmd:"a/write/3?val=25",
   expect:JSON.stringify({msg:"OK", port:3, val:25}),
   send:false
 },
 {
   name:"AO write test. No query.",
-  cmd:"ao/write/3",
+  cmd:"a/write/3",
   expect:JSON.stringify({msg:"NG", error:"Query not found."}),
   send:false
 },
 {
   name:"AO write test. Illegal query.",
-  cmd:"ao/write/3?hoge",
+  cmd:"a/write/3?hoge",
   expect:JSON.stringify({msg:"NG", error:"val is not specified."}),
   send:false
 },
 {
   name:"AO write test. Illegal value. ",
-  cmd:"ao/write/3?val=hoge",
+  cmd:"a/write/3?val=hoge",
   expect:JSON.stringify({msg:"NG", error:"Illegal value."}),
   send:false
 },
 {
   name:"AO write test. Illegal port number. ",
-  cmd:"ao/write/a?val=20",
+  cmd:"a/write/a?val=20",
   expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
   name:"AI Reference test. type = INTERNAL",
-  cmd:"ai/ref?type=INTERNAL",
+  cmd:"a/ref?type=INTERNAL",
   expect:JSON.stringify({msg:"OK", type:"INTERNAL"}),
   send:false
 },
 {
   name:"AI Reference test. type = EXTERNAL",
-  cmd:"ai/ref?type=EXTERNAL",
+  cmd:"a/ref?type=EXTERNAL",
   expect:JSON.stringify({msg:"OK", type:"EXTERNAL"}),
   send:false
 },
 {
   name:"AI Reference test. type = DEFAULT",
-  cmd:"ai/ref?type=DEFAULT",
+  cmd:"a/ref?type=DEFAULT",
   expect:JSON.stringify({msg:"OK", type:"DEFAULT"}),
   send:false
 },
 {
   name:"AI Reference test. Unknown type.",
-  cmd:"ai/ref?type=hoge",
+  cmd:"a/ref?type=hoge",
   expect:JSON.stringify({msg:"NG", error:"Illegal type."}),
   send:false
 },
 {
   name:"AI read test.",
-  cmd:"ai/read/1",
+  cmd:"a/read/1",
   expect:JSON.stringify({msg:"OK", port:1, val:1}).split("\"val")[0],
   send:false
 },
 {
   name:"AI read test. Illegal port.",
-  cmd:"ai/read/a",
+  cmd:"a/read/a",
   expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
   name:"DI read test.",
-  cmd:"di/read/0",
+  cmd:"d/read/0",
   expect:JSON.stringify({msg:"OK", port:0, val:1}).split("\"val")[0],
   send:false
 },
 {
   name:"DI read test. Illegal port",
-  cmd:"di/read/aa",
+  cmd:"d/read/aa",
   expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
   name:"DO write test.",
-  cmd:"do/write/3?val=25",
+  cmd:"d/write/3?val=25",
   expect:JSON.stringify({msg:"OK", port:3, val:0}),
   send:false
 },
 {
   name:"DO write test. HIGH",
-  cmd:"do/write/4?val=HIGH",
+  cmd:"d/write/4?val=HIGH",
   expect:JSON.stringify({msg:"OK", port:4, val:1}),
   send:false
 },
 {
   name:"DO write test. LOW",
-  cmd:"do/write/4?val=LOW",
+  cmd:"d/write/4?val=LOW",
   expect:JSON.stringify({msg:"OK", port:4, val:0}),
   send:false
 },
 {
   name:"DO write test. Illegal port number.",
-  cmd:"do/write/40?val=LOW",
+  cmd:"d/write/40?val=LOW",
   expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
   name:"DO write test. No query.",
-  cmd:"do/write/3",
+  cmd:"d/write/3",
   expect:JSON.stringify({msg:"NG", error:"Query not found."}),
   send:false
 },
 {
   name:"DO write test. Illegal port number. query is val.",
-  cmd:"do/write/b?val=3",
+  cmd:"d/write/b?val=3",
   expect:JSON.stringify({msg:"NG", error:"Illegal port number."}),
   send:false
 },
 {
   name:"DO write test. Illegal query.",
-  cmd:"do/write/3?hoge",
+  cmd:"d/write/3?hoge",
   expect:JSON.stringify({msg:"NG", error:"val is not specified."}),
   send:false
 },
 {
   name:"DO write test. Illegal value.",
-  cmd:"do/write/3?val=hoge",
+  cmd:"d/write/3?val=hoge",
   expect:JSON.stringify({msg:"NG", error:"Illegal value."}),
   send:false
 },

@@ -283,7 +283,7 @@ analogRead(port);
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-ai/read/[port]
+a/read/[port]
 ```
 
 [port]
@@ -308,7 +308,7 @@ ai/read/[port]
 */
 Arduinode.prototype.analogRead = function(port, callback) {
   var self = this;
-  self.send("ai/read/" + port, callback);
+  self.send("a/read/" + port, callback);
 }
 
 /***
@@ -342,7 +342,7 @@ analogWrite([port], [val]);
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-ao/write/[port]?val=[val]
+a/write/[port]?val=[val]
 
 ```
 [port]
@@ -365,7 +365,7 @@ ao/write/[port]?val=[val]
 */
 Arduinode.prototype.analogWrite = function(port, val, callback) {
   var self = this;
-  self.send("ao/write/" + port + "?val=" + val, callback);
+  self.send("a/write/" + port + "?val=" + val, callback);
 }
 
 /***
@@ -398,7 +398,7 @@ analogReference([type]);
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-ai/ref?type=[type]
+a/ref?type=[type]
 ```
 
 [type]
@@ -425,7 +425,7 @@ EXTERNAL
 */
 Arduinode.prototype.analogReference = function(type, callback) {
   var self = this;
-  self.send("ai/ref?type" + type, callback);
+  self.send("a/ref?type" + type, callback);
 }
 
 /***
@@ -464,7 +464,7 @@ digitalRead([port]);
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-di/read/{port}
+d/read/{port}
 ```
 
 [port]
@@ -489,7 +489,7 @@ di/read/{port}
 */
 Arduinode.prototype.digitalRead = function(port, callback) {
   var self = this;
-  self.send("di/read/" + port, callback);
+  self.send("d/read/" + port, callback);
 }
 
 
@@ -524,7 +524,7 @@ digitalWrite([port], [val]);
 ### リクエスト(node.js -> Arduino)
 
 ```txt
-do/write/[port]?val=[val]
+d/write/[port]?val=[val]
 ```
 
 [port]
@@ -555,7 +555,7 @@ do/write/[port]?val=[val]
 */
 Arduinode.prototype.digitalWrite = function(port, val, callback) {
   var self = this;
-  self.send("do/write/" + port + "?val=" + val, callback);
+  self.send("d/write/" + port + "?val=" + val, callback);
 }
 
 

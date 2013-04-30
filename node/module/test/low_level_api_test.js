@@ -84,11 +84,11 @@ describe("Arduinode low level API test", function(){
   describe("Analog", function(){
     describe("Write", function(){
       describe("正常なコマンドを送信", function(){
-        describe("ao/write/0?val=25", function(){
+        describe("a/write/0?val=25", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ao/write/0?val=25", function(e, r){
+            arduinode.send("a/write/0?val=25", function(e, r){
               err = e;
               result = r;
               done();
@@ -114,7 +114,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ao/write/a?val=25", function(e, r){
+            arduinode.send("a/write/a?val=25", function(e, r){
               err = e;
               result = r;
               done();
@@ -136,7 +136,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ao/write/0", function(e, r){
+            arduinode.send("a/write/0", function(e, r){
               err = e;
               result = r;
               done();
@@ -157,7 +157,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ao/write/0?hoge=25", function(e, r){
+            arduinode.send("a/write/0?hoge=25", function(e, r){
               err = e;
               result = r;
               done();
@@ -178,11 +178,11 @@ describe("Arduinode low level API test", function(){
 
     describe("Read", function(){
       describe("正常なコマンドを送信", function(){
-        describe("ai/read/0", function(){
+        describe("a/read/0", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/read/0", function(e, r){
+            arduinode.send("a/read/0", function(e, r){
               err = e;
               result = r;
               done();
@@ -205,11 +205,11 @@ describe("Arduinode low level API test", function(){
         // arduinoに存在しないポートでも一応動く.
         // 下記コミット以降ポートチェックをするようにした.
         // 05c847d9c026b67930158664e3f931690c7f5d0f
-        describe("ai/read/10", function(){
+        describe("a/read/10", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/read/10", function(e, r){
+            arduinode.send("a/read/10", function(e, r){
               err = e;
               result = r;
               done();
@@ -233,7 +233,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/read/a", function(e, r){
+            arduinode.send("a/read/a", function(e, r){
               err = e;
               result = r;
               done();
@@ -260,7 +260,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref?type=INTERNAL", function(e, r){
+            arduinode.send("a/ref?type=INTERNAL", function(e, r){
               err = e;
               result = r;
               done();
@@ -281,7 +281,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref?type=EXTERNAL", function(e, r){
+            arduinode.send("a/ref?type=EXTERNAL", function(e, r){
               err = e;
               result = r;
               done();
@@ -302,7 +302,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref?type=DEFAULT", function(e, r){
+            arduinode.send("a/ref?type=DEFAULT", function(e, r){
               err = e;
               result = r;
               done();
@@ -326,7 +326,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref?type=aaaaa", function(e, r){
+            arduinode.send("a/ref?type=aaaaa", function(e, r){
               err = e;
               result = r;
               done();
@@ -346,7 +346,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref", function(e, r){
+            arduinode.send("a/ref", function(e, r){
               err = e;
               result = r;
               done();
@@ -505,7 +505,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/3?val=1", function(e, r){
+            arduinode.send("d/write/3?val=1", function(e, r){
               err = e;
               result = r;
               done();
@@ -529,7 +529,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/4?val=0", function(e, r){
+            arduinode.send("d/write/4?val=0", function(e, r){
               err = e;
               result = r;
               done();
@@ -553,7 +553,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/5?val=HIGH", function(e, r){
+            arduinode.send("d/write/5?val=HIGH", function(e, r){
               err = e;
               result = r;
               done();
@@ -577,7 +577,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/6?val=LOW", function(e, r){
+            arduinode.send("d/write/6?val=LOW", function(e, r){
               err = e;
               result = r;
               done();
@@ -601,7 +601,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/7?val=20", function(e, r){
+            arduinode.send("d/write/7?val=20", function(e, r){
               err = e;
               result = r;
               done();
@@ -627,7 +627,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/a?val=HIGH", function(e, r){
+            arduinode.send("d/write/a?val=HIGH", function(e, r){
               err = e;
               result = r;
               done();
@@ -649,7 +649,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/0", function(e, r){
+            arduinode.send("d/write/0", function(e, r){
               err = e;
               result = r;
               done();
@@ -671,7 +671,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/0?val=hoge", function(e, r){
+            arduinode.send("d/write/0?val=hoge", function(e, r){
               err = e;
               result = r;
               done();
@@ -693,7 +693,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/0?hoge", function(e, r){
+            arduinode.send("d/write/0?hoge", function(e, r){
               err = e;
               result = r;
               done();
@@ -719,7 +719,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("di/read/1", function(e, r){
+            arduinode.send("d/read/1", function(e, r){
               err = e;
               result = r;
               done();
@@ -745,7 +745,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("di/read/a", function(e, r){
+            arduinode.send("d/read/a", function(e, r){
               err = e;
               result = r;
               done();

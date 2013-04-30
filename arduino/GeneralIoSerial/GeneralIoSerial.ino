@@ -108,47 +108,47 @@ const struct STR_UINT8_PEAR PIN_MODE_TBL[] = {
 const struct TASK_FUNC TASK_FUNC_TBL[] = {
   /*
      Read AI port.
-     format  => ai/read/{port}
+     format  => a/read/{port}
      {port}  => port number.
-     example => ai/read/0
+     example => a/read/0
    */
-  {"ai/read/", &aiReadTask},
+  {"a/read/", &aiReadTask},
 
   /*
     Switch AI reference volt.
-    format  => ai/ref?type={TYPE}
+    format  => a/ref?type={TYPE}
     {TYPE}  => DEFAULT | INTERNAL | EXTERNAL
-    example => ai/ref?type=INTERNAL
+    example => a/ref?type=INTERNAL
    */
-  {"ai/ref", &aiRefSwitchTask},
+  {"a/ref", &aiRefSwitchTask},
 
   /*
      Write AO port.
-     format  => ao/write/{port}?val={val}
+     format  => a/write/{port}?val={val}
      {port}  => port number.
      {val}   => write value.
-     example => ao/write/1?val=100
+     example => a/write/1?val=100
    */
-  {"ao/write/", &aoWriteTask},
+  {"a/write/", &aoWriteTask},
 
   /*
      Read DI port.
-     format  => di/read/{port}
+     format  => d/read/{port}
      {port}  => port number.
-     example => di/read/2
+     example => d/read/2
    */
-  {"di/read/", &diReadTask},
+  {"d/read/", &diReadTask},
 
 
   /*
      Write DO port.
-     format  => do/write/{port}?val={val}
+     format  => d/write/{port}?val={val}
      {port}  => port number.
      {val}   => write value. or HIGH | LOW
-     example => do/write/3?val=1
-     example => do/write/3?val=HIGH
+     example => d/write/3?val=1
+     example => d/write/3?val=HIGH
    */
-  {"do/write/", &doWriteTask},
+  {"d/write/", &doWriteTask},
 
   /*
      Swith digital pin mode.
