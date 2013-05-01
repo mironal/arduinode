@@ -89,6 +89,11 @@ var connectArduino = function(){
       console.log(results);
       console.log("************************************");
 
+      // 一つ以上の接続があったら、通知する.
+      if(numOfConnections > 0){
+        ws.sockets.emit("notify-all", arduinode._status);
+      }
+
     });
     // ポートの初期化が終わったらポートの値をwebsocketでpushする.
     // 但し、1つ以上の接続があるときのみ.
