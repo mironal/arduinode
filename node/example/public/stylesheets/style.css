@@ -41,9 +41,19 @@ div #left-value {
   margin-top: 209px;
 }
 
+div #right-direction {
+  float: left;
+}
+
+div .direction {
+  margin-bottom: 2px;
+  padding: 4px;
+  min-width: 40px;
+}
+
 div #right-port {
   float: left;
-  width: 40px;
+  width: 60px;
 }
 
 div #right-value {
