@@ -45,8 +45,28 @@ var ws = require("socket.io").listen(app_server);
 ws.set("log level", 1);
 ws.sockets.on('connection',  function (socket) {
   numOfConnections++;
+
+  socket.emit("notify-all", arduinode._status);
+
+
   socket.on("disconnect", function(){
     numOfConnections--;
+  });
+
+
+  socket.on("digitalWrite", function(data){
+    arduinode.digitalWriteWithNotify(data.port, data.val);
+  });
+
+  socket.on("pinMode", function(data){
+    switch(data.mode){
+      case "INPUT":
+        arduinode.switchToInput(data.port);
+        break;
+      case "OUTPUT":
+        arduinode.switchToOutput(data.port);
+        break;
+    }
   });
 });
 
@@ -55,9 +75,9 @@ var Arduinode = require("arduinode").Arduinode;
 
 // Rewrite Your serial port name.
 var portName = "/dev/tty.usbmodem1411";
-
+var arduinode = null;
 var connectArduino = function(){
-  var arduinode = new Arduinode(portName, function(err, result){
+  arduinode = new Arduinode(portName, function(err, result){
     if(err){
       setTimeout(connectArduino, 1000);
       return console.log(err);
@@ -67,6 +87,12 @@ var connectArduino = function(){
       if(err) throw err;
       console.log("*********** init arduino ***********");
       console.log(results);
+      console.log("************************************");
+
+      // 一つ以上の接続があったら、通知する.
+      if(numOfConnections > 0){
+        ws.sockets.emit("notify-all", arduinode._status);
+      }
 
     });
     // ポートの初期化が終わったらポートの値をwebsocketでpushする.
@@ -80,6 +106,68 @@ var connectArduino = function(){
     arduinode.on("close", function(){
       connectArduino();
     });
+
+
+    arduinode.digitalWriteWithNotify = function(port, value){
+      arduinode.digitalWrite(port, value, function(err, result){
+        if(err){
+          return console.log(err);
+        }
+        arduinode._status.digital[port].value = value;
+        ws.sockets.emit("notify", {port:port, direction:"OUTPUT", value:value});
+        console.log(result);
+      });
+    }
+
+    arduinode.switchToInput = function(port){
+      async.series([
+          function(cb){ arduinode.pinMode(port, "INPUT", cb); },
+          function(cb){ arduinode.digitalStreamOn(port, 200, cb); }
+          ],
+          function(err, results){
+            if(err){
+              return console.log(err);
+            }
+            // valueはとりあえず0で
+            arduinode._status.digital[port] = {direction:"INPUT", value:0};
+            ws.sockets.emit("notify", {port:port, direction:"INPUT", value:0});
+            console.log(results);
+          });
+    }
+
+    arduinode.switchToOutput = function(port){
+      async.series([
+          function(cb){ arduinode.digitalStreamOff(port, cb); },
+          function(cb){ arduinode.pinMode(port, "OUTPUT", cb); },
+          function(cb){ arduinode.digitalWrite(port, 0, cb); }
+          ],
+          function(err, results){
+            if(err){
+              return console.log(err);
+            }
+            arduinode._status.digital[port] = {direction:"OUTPUT", value:0};
+            ws.sockets.emit("notify", {port:port, direction:"OUTPUT", value:0});
+            console.log(results);
+          });
+    }
+
+    arduinode._status = {
+      digital:[
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0},
+      {direction:"INPUT", value:0}
+      ]
+    };
 
   });
 
