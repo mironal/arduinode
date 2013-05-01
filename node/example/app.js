@@ -108,6 +108,7 @@ var connectArduino = function(){
         if(err){
           return console.log(err);
         }
+        arduinode._status.digital[port].value = value;
         ws.sockets.emit("notify", {port:port, direction:"OUTPUT", value:value});
         console.log(result);
       });
@@ -123,7 +124,7 @@ var connectArduino = function(){
               return console.log(err);
             }
             // valueはとりあえず0で
-            arduinode._status[port] = {direction:"INPUT", value:0};
+            arduinode._status.digital[port] = {direction:"INPUT", value:0};
             ws.sockets.emit("notify", {port:port, direction:"INPUT", value:0});
             console.log(results);
           });
@@ -139,7 +140,7 @@ var connectArduino = function(){
             if(err){
               return console.log(err);
             }
-            arduinode._status[port] = {direction:"OUTPUT", value:0};
+            arduinode._status.digital[port] = {direction:"OUTPUT", value:0};
             ws.sockets.emit("notify", {port:port, direction:"OUTPUT", value:0});
             console.log(results);
           });

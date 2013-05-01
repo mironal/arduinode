@@ -1,6 +1,7 @@
 $(function(){
   var socket = io.connect(document.URL);
 
+  // INPUT時にstreamのイベントが発行された時に実行される.
   socket.on("event", function(data){
     var type = data.event;
     var port = data.data.port;
@@ -19,41 +20,45 @@ $(function(){
   });
 
 
+  // OUTPUT、INPUTが切り替わった時やOUTPUT時にポートの値が
+  // 変更された時に通知される.
   socket.on("notify", function(data){
-    console.log(data);
+    change_direction(data.port, data.direction, data.value);
   });
 
+  // 接続時に現在のArduinoの状態が通知される.
   socket.on("notify-all", function(data){
     for(var i = 0; i < data.digital.length; i++){
-      switch(data.digital[i].direction){
-        case "INPUT":
-          replace_each($("#dir-d" + i ).children("span"), ">");
-          break;
-        case "OUTPUT":
-          replace_each($("#dir-d" + i ).children("span"), "<");
-          break;
-      }
-      $("#d" + i).css("background", "lightgreen").text(data.digital[i].value);
+      var status = data.digital[i];
+      change_direction(i, status.direction, status.value);
     }
   });
 
 
+  // OUTPUTの時に値の所がクリックされたら1と0を切り返る
   $(".port-value").on("click", function(){
     var self = $(this);
-    var dir = $("#dir-" + self.attr("id")).text().trim();
-    if(dir === "<<"){
-      var port = self.attr("id").replace("d", "");
-      var val = parseInt(self.text());
-      if(val === 1){
-        val = 0;
-      }else{
-        val = 1;
+    var spans = $("#dir-" + self.attr("id")).children("span");
+
+    if(self.hasClass("serial-port") || spans.length < 1){
+      return;
+    }
+
+    var allow = $(spans[0]).text().trim();
+
+    if( allow === "<"){
+      var now = parseInt(self.text());
+      var to = {port:0, val:0};
+      to.port = self.attr("id").replace("d", "");
+      if(now === 0){
+        to.val = 1;
       }
-      self.text(val);
-      socket.emit("digitalWrite", {port:port, val:val});
+      socket.emit("digitalWrite", to);
     }
   });
 
+
+  // 矢印の所がクリックされたらINPUTとOUTPUTを切り替える
   $(".direction span").on("click", function(){
     var div = $(this).parent();
     var spans = div.children("span");
@@ -61,15 +66,18 @@ $(function(){
       return;
     }
 
-    var text = $(spans[0]).text().trim();
+    var allow = $(spans[0]).text().trim();
     var port = parseInt(div.attr("id").replace("dir-d", ""));
-    if(text === "<"){
-      replace_each(spans, ">");
-      socket.emit("pinMode", {port:port, mode:"INPUT"});
-    }else if(text === ">"){
-      replace_each(spans, "<");
-      $("#d" + port).css("background", "lightgreen");
+
+    switch(allow){
+      case ">":
       socket.emit("pinMode", {port:port, mode:"OUTPUT"});
+        break;
+      case "<":
+      socket.emit("pinMode", {port:port, mode:"INPUT"});
+        break;
+      default:
+        console.log("Unknown text : " + allow);
     }
   });
 
@@ -89,6 +97,32 @@ $(function(){
       });
   }
 
+
+  var change_direction = function(port, direction, value){
+    switch(direction){
+      case "INPUT":
+        replace_to_input(port);
+        break;
+      case "OUTPUT":
+        replace_to_output(port);
+        break;
+    }
+    set_port_value(port, value);
+  }
+
+
+  var set_port_value = function(port, value){
+    $("#d" + port).text(value);
+  }
+
+  var replace_to_output = function(port){
+    replace_each($("#dir-d" + port).children("span"), "<");
+    $("#d" + port).css("background-color", "lightgreen");
+  }
+
+  var replace_to_input = function(port){
+    replace_each($("#dir-d" + port).children("span"), ">");
+  }
   var apply_value = function(selector, val){
     var div = $(selector);
     var old_val = div.text();
