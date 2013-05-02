@@ -205,11 +205,11 @@ describe("Arduinode low level API test", function(){
         // arduinoに存在しないポートでも一応動く.
         // 下記コミット以降ポートチェックをするようにした.
         // 05c847d9c026b67930158664e3f931690c7f5d0f
-        describe("a/read/10", function(){
+        describe("a/read/100", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("a/read/10", function(e, r){
+            arduinode.send("a/read/100", function(e, r){
               err = e;
               result = r;
               done();
