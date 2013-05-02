@@ -175,6 +175,7 @@ function Arduinode(portname, callback){
     process.nextTick(function(){
       callback(new Error("portname is required."));
     });
+    return;
   }
 
 
@@ -243,6 +244,19 @@ util.inherits(Arduinode, SerialPort);
  * Low level API
  */
 Arduinode.prototype.send = function(cmd, callback) {
+
+  if(!callback){
+    callback = function(){}
+  }
+
+  if(!cmd){
+    callback(new Error("cmd is required."));
+  }
+
+  if(typeof cmd !== "string"){
+    callback(new TypeError("cmd must be a string."));
+  }
+
   var self = this;
   if(cmd.length < 100){
     self.callback = callback;
@@ -323,6 +337,7 @@ a/read/[port]
 
 */
 Arduinode.prototype.analogRead = function(port, callback) {
+
   var self = this;
   self.send("a/read/" + port, callback);
 }
