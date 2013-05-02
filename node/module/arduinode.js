@@ -11,6 +11,22 @@ var options = {
   flowControl: false,
 };
 
+function rethrow(){
+  return function(err){
+    if(err) throw err;
+  };
+}
+
+function makeCallback(cb) {
+  if (typeof cb !== 'function') {
+    return rethrow();
+  }
+
+  return function() {
+    return cb.apply(null, arguments);
+  };
+}
+
 /***
 
 
@@ -186,6 +202,7 @@ function Arduinode(portname, callback){
 
   self.sp.on("error", function(e){
     self.callback(e, null);
+    self.callback = null;
   });
 
   self.sp.on("end", function(){
@@ -220,8 +237,10 @@ function Arduinode(portname, callback){
               error.name = "Command error.";
               error.message = json.error;
               self.callback(error, json);
+              self.callback = null;
             }else{
               self.callback(null, json);
+              self.callback = null;
             }
           }
         }catch(e){
@@ -243,24 +262,33 @@ util.inherits(Arduinode, SerialPort);
  *
  * Low level API
  */
-Arduinode.prototype.send = function(cmd, callback) {
+Arduinode.prototype.send = function(command, callback) {
 
-  if(!callback){
-    callback = function(){}
+
+  callback = makeCallback(callback);
+
+  if(!command){
+    return callback(new Error("command is required."));
   }
 
-  if(!cmd){
-    callback(new Error("cmd is required."));
-  }
-
-  if(typeof cmd !== "string"){
-    callback(new TypeError("cmd must be a string."));
+  if(typeof command !== "string"){
+    return callback(new TypeError("command must be a string."));
   }
 
   var self = this;
-  if(cmd.length < 100){
-    self.callback = callback;
-    self._write(cmd,null);
+  if(command.length < 100){
+    if(self.callback){
+      // 別のコマンド実行中に更にコマンドを実行しようとした場合はエラー
+      // 連続してコマンドを送信するとArduinoの受信バッファが溢れて死ぬため.
+      // このエラーの発生原因はユーザプログラムではなくモジュールのバグなので
+      // 通常発生することはない.
+      // 発生した場合は報告して下さい.
+      callback(new Error("Illegal state."));
+    }else{
+      self.callback = callback;
+      // 送信済みコールバックは指定しない.
+      self._write(command,null);
+    }
   }else{
     // Arduinoのバッファがあふれるようなサイズのコマンドは
     // 送信せずにエラーを発生させる。
@@ -268,7 +296,7 @@ Arduinode.prototype.send = function(cmd, callback) {
     var error = new Error();
     error.name = "Command error.";
     error.message = "Command is too long.";
-    callback(error, null);
+    callback(error);
   }
 }
 
