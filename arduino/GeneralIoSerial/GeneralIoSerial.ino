@@ -293,7 +293,7 @@ char* switchPinModeTask(String portWithQuery){
     return error;
   }
 
-  error = checkDigitalPortRange(port);
+  error = checkPortRange(port);
   if(error){
     return error;
   }
@@ -329,7 +329,7 @@ char* aoWriteTask(String portWithValue){
     return error;
   }
 
-  error = checkAnalogPortRange(port);
+  error = checkPortRange(port);
   if(error){
     return error;
   }
@@ -348,7 +348,7 @@ char* doWriteTask(String portWithValue){
     return error;
   }
 
-  error = checkDigitalPortRange(port);
+  error = checkPortRange(port);
   if(error){
     return error;
   }
@@ -370,7 +370,7 @@ char* diReadTask(String portQuery){
   }
   uint8_t port = strToInt(portQuery);
 
-  error = checkDigitalPortRange(port);
+  error = checkPortRange(port);
   if(error){
     return error;
   }
@@ -394,7 +394,7 @@ char* aiReadTask(String portQuery){
   uint8_t port = strToInt(portQuery);
 
 
-  error = checkAnalogPortRange(port);
+  error = checkPortRange(port);
   if(error){
     return error;
   }
@@ -439,7 +439,7 @@ char* streamDiOnTask(String portWithInterval){
     return error;
   }
 
-  error = checkDigitalPortRange(port);
+  error = checkPortRange(port);
   if(error){
     return error;
   }
@@ -466,7 +466,7 @@ char* streamDiOffTask(String query){
   }
 
   uint8_t port = strToInt(query);
-  error = checkDigitalPortRange(port);
+  error = checkPortRange(port);
   if(error){
     return error;
   }
@@ -486,7 +486,7 @@ char* streamAiOnTask(String portWithInterval){
     return error;
   }
 
-  error = checkAnalogPortRange(port);
+  error = checkPortRange(port);
   if(error){
     return error;
   }
@@ -512,7 +512,7 @@ char* streamAiOffTask(String query){
   }
 
   uint8_t port = strToInt(query);
-  error = checkAnalogPortRange(port);
+  error = checkPortRange(port);
   if(error){
     return error;
   }
@@ -768,20 +768,19 @@ char* checkPortWithValue(String portWithValue, uint8_t *port, int *val){
   return NULL;
 }
 
-char* checkAnalogPortRange(uint8_t port){
-  if(port < AI_MAX_PORT_NUM){
+/*
+ * ポート番号の範囲をチェック.
+ * analogポートの数とdigitalポートの数の和を超えていたらエラー.
+ * analogWriteはdigitalポートを使ったり
+ * analogポートををDigital出力に使用することもできるので、
+ * そのあたりに対応するために緩いチェックを行う.
+ */
+char* checkPortRange(uint8_t port){
+  if(port < (AI_MAX_PORT_NUM + DI_MAX_PORT_NUM)){
     return NULL;
   }
   return NgReturnJson(ILLEGAL_PORT_NUMBER);
 }
-
-char* checkDigitalPortRange(uint8_t port){
-  if(port < DI_MAX_PORT_NUM){
-    return NULL;
-  }
-  return NgReturnJson(ILLEGAL_PORT_NUMBER);
-}
-
 
 
 /**************************************************************************
