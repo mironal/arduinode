@@ -161,9 +161,25 @@ var arduinode = new Arduinode(portname, function(err, result){
 
 */
 
-function Arduinode(path, callback){
+function Arduinode(portname, callback){
+
+
+  // SerialPortオープン後に通信可能になるので、
+  // 未オープンの状態で通信を開始させないために
+  // ここのcallbackは必須とする.
+  if(!callback || typeof callback !== 'function'){
+    throw new Error("callback function is required.");
+  }
+
+  if(!portname){
+    process.nextTick(function(){
+      callback(new Error("portname is required."));
+    });
+  }
+
+
   var self = this;
-  self.sp = new SerialPort(path, options);
+  self.sp = new SerialPort(portname, options);
   self.buf = [];
   self.callback = callback;
 
