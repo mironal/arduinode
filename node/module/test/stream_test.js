@@ -1,16 +1,17 @@
 "use strict";
+var util = require('util');
 var async = require("async");
 var program = require("commander");
 var _ = require("underscore");
 
-function list(val) {
-  return val.split(",");
+function intList(val) {
+  return _.map(val.split(","), function(v){return parseInt(v);});
 }
 
 program.version("0.0.1")
   .option("-s, --serial [name]", "Serial port name.", "/dev/tty.usbmodem1411")
-  .option("-d, --digital <ports>", "Digital stream test. -d 1,2,3", list)
-  .option("-a, --analog <ports>", "Analog stream test. -a 1,2,3", list)
+  .option("-d, --digital <ports>", "Digital stream test. -d 1,2,3", intList)
+  .option("-a, --analog <ports>", "Analog stream test. -a 1,2,3", intList)
   .option("-i, --interval [msec]", "Sampling interval.", parseInt)
   .parse(process.argv);
 
