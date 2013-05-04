@@ -109,6 +109,14 @@ const prog_char TYPE_IS_NOT_SPECIFIED[] PROGMEM = "type is not specified.";
 const prog_char VAL_IS_NOT_SPECIFIED[] PROGMEM  = "val is not specified.";
 const prog_char COMMAND_IS_TOO_LONG[] PROGMEM   = "Command is too long.";
 
+const prog_char JSON_FORMAT_NG[] PROGMEM               = "{\"msg\":\"NG\",\"error\":\"%s\"}";
+const prog_char JSON_FORMAT_SWITCH_TYPE[] PROGMEM      = "{\"msg\":\"OK\",\"type\":\"%s\"}";
+const prog_char JSON_FORMAT_WRAP_EVENT[] PROGMEM       = "{\"event\":\"%s\",\"data\":%s}";
+const prog_char JSON_FORMAT_INTERRUPT[] PROGMEM        = "{\"msg\":\"OK\",\"num\":%d,\"count\":%d}";
+const prog_char JSON_FORMAT_ATTACH_INTERRUPT[] PROGMEM = "{\"msg\":\"OK\",\"num\":%d,\"mode\":\"%s\"}";
+const prog_char JSON_FORMAT_IO[] PROGMEM               = "{\"msg\":\"OK\",\"port\":%d,\"val\":%d}";
+const prog_char JSON_FORMAT_READY[] PROGMEM            = "{\"msg\":\"READY\"}";
+
 // リクエスト受信バッファ
 char read_buf[128];
 int buf_index = 0;
@@ -708,16 +716,23 @@ int intPow(int base, int e){
 
 
 char* initJson(){
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_READY);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"READY\"}");
+      format_buf
+      );
 
   return RESULT_MSG_PTR;
 }
 
 char* okIoJson(uint8_t port, uint16_t val){
 
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_IO);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"OK\",\"port\":%d,\"val\":%d}",
+      format_buf,
       port,
       val);
 
@@ -725,16 +740,24 @@ char* okIoJson(uint8_t port, uint16_t val){
 }
 
 char* okAttachInterruptJson(uint8_t num, uint8_t mode){
+
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_ATTACH_INTERRUPT);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"OK\",\"num\":%d,\"mode\":\"%s\"}",
+      format_buf,
       num,
       INTERRUPT_MODE_TBL[mode].key);
   return RESULT_MSG_PTR;
 }
 
 char* interruptJson(uint8_t num, uint32_t count){
+
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_INTERRUPT);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"OK\",\"num\":%d,\"count\":%d}",
+      format_buf,
       num,
       count);
   return RESULT_MSG_PTR;
@@ -752,8 +775,11 @@ char* wrapEventJson(char* type, char* dataJson){
   char buf[64] = {0};
   strcpy(buf, dataJson);
 
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_WRAP_EVENT);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"event\":\"%s\",\"data\":%s}",
+      format_buf,
       type,
       buf);
   return RESULT_MSG_PTR;
@@ -762,8 +788,11 @@ char* wrapEventJson(char* type, char* dataJson){
 
 char* switchTypeReturnJson(char* refType){
 
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_SWITCH_TYPE);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"OK\",\"type\":\"%s\"}",
+      format_buf,
       refType);
 
   return RESULT_MSG_PTR;
@@ -774,8 +803,11 @@ char* NgReturnJson(const prog_char *err){
   char buf[30] = {0};
   strcpy_P(buf, err);
 
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_NG);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"NG\",\"error\":\"%s\"}",
+      format_buf,
       buf);
 
   return RESULT_MSG_PTR;
