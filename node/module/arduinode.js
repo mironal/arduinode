@@ -11,6 +11,22 @@ var options = {
   flowControl: false,
 };
 
+function rethrow(){
+  return function(err){
+    if(err) throw err;
+  };
+}
+
+function makeCallback(cb) {
+  if (typeof cb !== 'function') {
+    return rethrow();
+  }
+
+  return function() {
+    return cb.apply(null, arguments);
+  };
+}
+
 /***
 
 
@@ -161,14 +177,31 @@ var arduinode = new Arduinode(portname, function(err, result){
 
 */
 
-function Arduinode(path, callback){
+function Arduinode(portname, callback){
+
+
+  // SerialPortオープン後に通信可能になるので、
+  // 未オープンの状態で通信を開始させないために
+  // ここのcallbackは必須とする.
+  if(!callback || typeof callback !== 'function'){
+    throw new Error("callback function is required.");
+  }
+
+  if(!portname){
+    process.nextTick(function(){
+      callback(new Error("portname is required."));
+    });
+    return;
+  }
+
+
   var self = this;
-  self.sp = new SerialPort(path, options);
+  self.sp = new SerialPort(portname, options);
   self.buf = [];
   self.callback = callback;
 
   self.sp.on("error", function(e){
-    self.callback(e, null);
+    self._execCallback(e, null);
   });
 
   self.sp.on("end", function(){
@@ -202,9 +235,9 @@ function Arduinode(path, callback){
               var error = new Error();
               error.name = "Command error.";
               error.message = json.error;
-              self.callback(error, json);
+              self._execCallback(error, json);
             }else{
-              self.callback(null, json);
+              self._execCallback(null, json);
             }
           }
         }catch(e){
@@ -226,20 +259,21 @@ util.inherits(Arduinode, SerialPort);
  *
  * Low level API
  */
-Arduinode.prototype.send = function(cmd, callback) {
-  var self = this;
-  if(cmd.length < 100){
-    self.callback = callback;
-    self._write(cmd,null);
-  }else{
-    // Arduinoのバッファがあふれるようなサイズのコマンドは
-    // 送信せずにエラーを発生させる。
-    // Arduinoの受信バッファサイズは128byteであるが、100に制限する.
-    var error = new Error();
-    error.name = "Command error.";
-    error.message = "Command is too long.";
-    callback(error, null);
+Arduinode.prototype.send = function(command, callback) {
+
+
+  callback = makeCallback(callback);
+
+  if(!command){
+    return callback(new Error("command is required."));
   }
+
+  if(typeof command !== "string"){
+    return callback(new TypeError("command must be a string."));
+  }
+
+  var self = this;
+  self._send(command, callback);
 }
 
 /*
@@ -307,8 +341,15 @@ a/read/[port]
 
 */
 Arduinode.prototype.analogRead = function(port, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof port !== "number"){
+    return callback(new TypeError("port must be a number"));
+  }
+
   var self = this;
-  self.send("a/read/" + port, callback);
+  self._send("a/read/" + port, callback);
 }
 
 /***
@@ -364,8 +405,19 @@ a/write/[port]?val=[val]
 
 */
 Arduinode.prototype.analogWrite = function(port, val, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof val !== "number"){
+    return callback(new TypeError("val must be a number"));
+  }
+
+  if(typeof port !== "number"){
+    return callback(new TypeError("port must be a number"));
+  }
+
   var self = this;
-  self.send("a/write/" + port + "?val=" + val, callback);
+  self._send("a/write/" + port + "?val=" + val, callback);
 }
 
 /***
@@ -424,8 +476,15 @@ EXTERNAL
 
 */
 Arduinode.prototype.analogReference = function(type, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof type !== "string"){
+    return callback(new TypeError("type must be a string"));
+  }
+
   var self = this;
-  self.send("a/ref?type" + type, callback);
+  self._send("a/ref?type" + type, callback);
 }
 
 /***
@@ -488,8 +547,15 @@ d/read/{port}
 
 */
 Arduinode.prototype.digitalRead = function(port, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof port !== "number"){
+    return callback(new TypeError("port must be a number"));
+  }
+
   var self = this;
-  self.send("d/read/" + port, callback);
+  self._send("d/read/" + port, callback);
 }
 
 
@@ -554,8 +620,19 @@ d/write/[port]?val=[val]
 
 */
 Arduinode.prototype.digitalWrite = function(port, val, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof val !== "number" && val !== "HIGH" && val !== "LOW"){
+    return callback(new TypeError("val must be a number"));
+  }
+
+  if(typeof port !== "number"){
+    return callback(new TypeError("port must be a number"));
+  }
+
   var self = this;
-  self.send("d/write/" + port + "?val=" + val, callback);
+  self._send("d/write/" + port + "?val=" + val, callback);
 }
 
 
@@ -621,8 +698,19 @@ OUTPUT
 
 */
 Arduinode.prototype.pinMode = function(port, type, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof type !== "string"){
+    return callback(new TypeError("type must be a string"));
+  }
+
+  if(typeof port !== "number"){
+    return callback(new TypeError("port must be a number"));
+  }
+
   var self = this;
-  self.send("d/mode/" + port + "?type=" + type, callback);
+  self._send("d/mode/" + port + "?type=" + type, callback);
 }
 
 /***
@@ -739,8 +827,19 @@ stream/di/on/[port]?interval=[interval]
 
 */
 Arduinode.prototype.digitalStreamOn = function(port, interval, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof interval !== "number"){
+    return callback(new TypeError("interval must be a number. " + interval));
+  }
+
+  if(typeof port !== "number"){
+    return callback(new TypeError("port must be a number. " + port));
+  }
+
   var self = this;
-  self.send("stream/di/on/" + port + "?interval=" + interval, callback);
+  self._send("stream/di/on/" + port + "?interval=" + interval, callback);
 }
 
 
@@ -795,8 +894,15 @@ arduinode.on("event", function(data){
 
 */
 Arduinode.prototype.digitalStreamOff = function(port, callback) {
+
+  callback = makeCallback(callback);
+
+  if(port !== "all" && typeof port !== "number"){
+    return callback(new TypeError("port must be a number or \"all\""));
+  }
+
   var self = this;
-  self.send("stream/di/off/" + port, callback);
+  self._send("stream/di/off/" + port, callback);
 }
 
 /***
@@ -851,8 +957,19 @@ arduinode.on("event", function(data){
 
 */
 Arduinode.prototype.analogStreamOn = function(port, interval, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof interval !== "number"){
+    return callback(new TypeError("interval must be a number"));
+  }
+
+  if(typeof port !== "number"){
+    return callback(new TypeError("port must be a number"));
+  }
+
   var self = this;
-  self.send("stream/ai/on/" + port + "?interval=" + interval, callback);
+  self._send("stream/ai/on/" + port + "?interval=" + interval, callback);
 }
 
 /***
@@ -905,8 +1022,15 @@ stream/ai/off/[port]
 
 */
 Arduinode.prototype.analogStreamOff = function(port, callback) {
+
+  callback = makeCallback(callback);
+
+  if(port !== "all" && typeof port !== "number"){
+    return callback(new TypeError("port must be a number or \"all\""));
+  }
+
   var self = this;
-  self.send("stream/ai/off/" + port, callback);
+  self._send("stream/ai/off/" + port, callback);
 }
 
 /***
@@ -983,6 +1107,47 @@ Arduinode.prototype._write = function(cmd, callback){
     if(callback){
       callback();
     }
+  });
+}
+
+
+/*
+ * この関数は引数がチェック済みの状態で呼ばれる.
+ * (但しコマンドの文字列数のチェックはここで行う.
+ */
+Arduinode.prototype._send = function(command, callback){
+  var self = this;
+
+  if(command.length >= 100){
+    // Arduinoのバッファがあふれるようなサイズのコマンドは
+    // 送信せずにエラーを発生させる。
+    // Arduinoの受信バッファサイズは128byteであるが、100に制限する.
+    var error = new Error();
+    error.name = "Command error.";
+    error.message = "Command is too long.";
+    return callback(error);
+  }
+
+  if(self.callback){
+    // 別のコマンド実行中に更にコマンドを実行しようとした場合はエラー
+    // 連続してコマンドを送信するとArduinoの受信バッファが溢れて死ぬため.
+    // このエラーの発生原因はユーザプログラムではなくモジュールのバグなので
+    // 通常発生することはない.
+    // 発生した場合は報告して下さい.
+    return callback(new Error("Illegal state."));
+  }
+
+  self.callback = callback;
+  // 送信済みコールバックは指定しない.
+  self._write(command,null);
+}
+
+Arduinode.prototype._execCallback = function(err, result){
+  var self = this;
+  var callback = self.callback;
+  self.callback = null;
+  process.nextTick(function(){
+    callback(err, result);
   });
 }
 

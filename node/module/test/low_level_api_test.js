@@ -37,6 +37,71 @@ describe("Arduinode low level API test", function(){
       });
     });
 
+    describe("Illegal type コマンド", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.send(1, function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnullじゃない.", function(){
+        should.exists(err);
+      });
+      it("errのnameがTypeError", function(){
+        err.name.should.equal("TypeError");
+      });
+      it("errのmessageがcommand must be a string.", function(){
+        err.message.should.equal("command must be a string.");
+      });
+    });
+
+    describe("nullコマンド", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.send(null, function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnullじゃない.", function(){
+        should.exists(err);
+      });
+      it("errのnameがError", function(){
+        err.name.should.equal("Error");
+      });
+      it("errのmessageが command is required.", function(){
+        err.message.should.equal("command is required.");
+      });
+    });
+
+
+    describe("Illegal state command.", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.send("a", function(e, r){});
+        arduinode.send("b", function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnullじゃない.", function(){
+        should.exists(err);
+      });
+      it("errのnameがError", function(){
+        err.name.should.equal("Error");
+      });
+      it("errのmessageがIllegal state.", function(){
+        err.message.should.equal("Illegal state.");
+      });
+    });
+
     describe("空の文字", function(){
       var err;
       var result;
@@ -50,11 +115,11 @@ describe("Arduinode low level API test", function(){
       it("errがnullじゃない.", function(){
         should.exists(err);
       });
-      it("errのnameがCommand error.", function(){
-        err.name.should.equal("Command error.");
+      it("errのnameがError", function(){
+        err.name.should.equal("Error");
       });
-      it("errのmessageがIllegal command", function(){
-        err.message.should.equal("Illegal command.");
+      it("errのmessageが command is required.", function(){
+        err.message.should.equal("command is required.");
       });
     });
 

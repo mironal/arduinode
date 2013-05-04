@@ -139,6 +139,80 @@ describe("Arduinode high level API test", function(){
         });
       });
     });
+
+    describe("Stream", function(){
+      describe("analogStreamOn(0, 500)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.analogStreamOn(0, 500, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("portが0", function(){
+          result.port.should.equal(0);
+        });
+        it("valが1", function(){
+          result.val.should.equal(1);
+        });
+      });
+
+      describe("analogStreamOff(0)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.analogStreamOff(0, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("portが0", function(){
+          result.port.should.equal(0);
+        });
+        it("valが0", function(){
+          result.val.should.equal(0);
+        });
+      });
+
+      describe("analogStreamOff(\"all\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.analogStreamOff("all", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("portが255", function(){
+          result.port.should.equal(255);
+        });
+        it("valが0", function(){
+          result.val.should.equal(0);
+        });
+      });
+    });
   });
 
   describe("Digital", function(){
@@ -362,6 +436,79 @@ describe("Arduinode high level API test", function(){
     });
   });
 
+  describe("Stream", function(){
+    describe("digitalStreamOn(0, 100)", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.digitalStreamOn(0, 100, function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnull", function(){
+        should.not.exists(err);
+      });
+      it("msgがOK", function(){
+        result.msg.should.equal("OK");
+      });
+      it("portが0", function(){
+        result.port.should.equal(0);
+      });
+      it("valが1", function(){
+        result.val.should.equal(1);
+      });
+    });
+
+    describe("digitalStreamOff(0)", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.digitalStreamOff(0, function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnull", function(){
+        should.not.exists(err);
+      });
+      it("msgがOK", function(){
+        result.msg.should.equal("OK");
+      });
+      it("portが0", function(){
+        result.port.should.equal(0);
+      });
+      it("valが0", function(){
+        result.val.should.equal(0);
+      });
+    });
+
+    describe("digitalStreamOff(\"all\")", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.digitalStreamOff("all", function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnull", function(){
+        should.not.exists(err);
+      });
+      it("msgがOK", function(){
+        result.msg.should.equal("OK");
+      });
+      it("portが255", function(){
+        result.port.should.equal(255);
+      });
+      it("valが0", function(){
+        result.val.should.equal(0);
+      });
+    });
+  });
   after(function(done){
     arduinode.close(function(){
       done();
