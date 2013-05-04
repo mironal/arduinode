@@ -11,6 +11,8 @@
 // 各々のコマンドに対して処理を行う関数の型
 typedef char* (*TASK_FUNC_PTR)(String str);
 
+typedef void (*VOID_FUNC_PTR)(void);
+
 // コマンドの文字列の先頭の文字と処理する関数を保持する構造体
 struct TASK_FUNC {
   char* prefix;
@@ -72,6 +74,27 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
   {"DEFAULT", DEFAULT},
   {"INTERNAL", INTERNAL},
   {"EXTERNAL", EXTERNAL}
+};
+
+const struct STR_UINT8_PEAR INTERRUPT_MODE_TBL[] = {
+  {"LOW", LOW},
+  {"CHANGE", CHANGE},
+  {"RISING", RISING},
+  {"FALLING", FALLING}
+};
+
+volatile uint32_t interrupt_counter[2] = {0};
+void interrupt0(void){
+  ++interrupt_counter[0];
+}
+
+void interrupt1(void){
+  ++interrupt_counter[1];
+}
+
+const VOID_FUNC_PTR INTERRUPT_FUNC_TBL[] = {
+  interrupt0,
+  interrupt1,
 };
 
 #endif
@@ -158,6 +181,32 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      example => d/mode/3?type=INPUT
    */
   {"d/mode/", &switchPinModeTask},
+
+
+  /*
+     attachInterrupt
+     format  => d/int/on/{num}?type={type}
+     {num}   => number of interrupt.
+     {type}  => LOW | CHANGE | RISING | FALLING
+     example => d/int/on/0?type=LOW
+
+     LOW ピンがLOWのとき発生
+     CHANGE ピンの状態が変化したときに発生
+     RISING ピンの状態がLOWからHIGHに変わったときに発生
+     FALLING ピンの状態がHIGHからLOWに変わったときに発生
+
+     // TODO: typeじゃなくてmodeにしたい
+   */
+  {"d/int/on/", &attachInterruptTask},
+
+
+  /*
+     detachInterrupt
+     format  => d/int/off/{num}
+     {num}   => number of interrupt.
+     example => d/int/off/0
+   */
+  {"d/int/off/", &detachInterruptTask},
 
   /*
     DI連続転送ON
@@ -267,7 +316,15 @@ void loop() {
     }
   }
 
+  for(uint8_t i = 0; i < ARRAYSIZE(interrupt_counter); i++){
+    if(interrupt_counter[i] > 0){
+      Serial.println(wrapEventJson("int", interruptJson(i, interrupt_counter[i])));
+      interrupt_counter[i] = 0;
+    }
+  }
+
 }
+
 
 char* task(String msg){
   // 関数テーブルからタスクを決定する.
@@ -523,6 +580,45 @@ char* streamAiOffTask(String query){
 }
 
 
+/*
+   LOWは何も繋げていないと大量に割込が入ってくるので注意
+*/
+char* attachInterruptTask(String queryWithType){
+
+  char type[16 + 1] = {0};
+  uint8_t num = 0;
+
+  char* error = checkPortWithType(queryWithType, &num, &type[0]);
+  if(error){
+    return error;
+  }
+
+  if(num >= ARRAYSIZE(INTERRUPT_FUNC_TBL)){
+    // ポートじゃないので後で別のエラーを作る.
+    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  }
+
+  for(uint8_t i = 0; i < ARRAYSIZE(INTERRUPT_MODE_TBL); i++){
+    if(strcmp(type, INTERRUPT_MODE_TBL[i].key) == 0){
+      attachInterrupt(num, INTERRUPT_FUNC_TBL[num], INTERRUPT_MODE_TBL[i].value);
+      return okAttachInterruptJson(num, i);
+    }
+  }
+
+  return NgReturnJson(ILLEGAL_TYPE);
+}
+
+char* detachInterruptTask(String queryWithPort){
+
+  char* error = checkPortQuery(queryWithPort);
+  if(error){
+    return error;
+  }
+
+  uint8_t num = strToInt(queryWithPort);
+  detachInterrupt(num);
+}
+
 // スタックオーバーフローにより強制的にリセット
 char* resetTask(String empty){
   resetTask("");
@@ -625,6 +721,22 @@ char* okIoJson(uint8_t port, uint16_t val){
       port,
       val);
 
+  return RESULT_MSG_PTR;
+}
+
+char* okAttachInterruptJson(uint8_t num, uint8_t mode){
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      "{\"msg\":\"OK\",\"num\":%d,\"mode\":\"%s\"}",
+      num,
+      INTERRUPT_MODE_TBL[mode].key);
+  return RESULT_MSG_PTR;
+}
+
+char* interruptJson(uint8_t num, uint32_t count){
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      "{\"msg\":\"OK\",\"num\":%d,\"count\":%d}",
+      num,
+      count);
   return RESULT_MSG_PTR;
 }
 
@@ -734,6 +846,30 @@ char* checkPortWithInterval(String portWithInterval, uint8_t *port, uint64_t *in
     }
   }else{
     *interval = 1;
+  }
+  return NULL;
+}
+
+// {port}?type={type string}なqueryを分解.
+// typeのバッファに16文字コピーを行うので、
+// typeのバッファサイズは16以上にすること。
+// またtypeの文字列は16文字未満の文字列とすること.
+char* checkPortWithType(String portWithType, uint8_t *port, char *type){
+  String typeQuery;
+
+  char* error = checkPortWithQuery(portWithType, port, &typeQuery);
+  if(error){
+    return error;
+  }
+
+  if(typeQuery.startsWith("type=")){
+    typeQuery.replace("type=", "");
+    if(typeQuery.length() > 16){
+      return NgReturnJson(ILLEGAL_QUERY);
+    }
+    typeQuery.toCharArray(type, 16);
+  }else{
+    return NgReturnJson(ILLEGAL_QUERY);
   }
   return NULL;
 }
