@@ -94,11 +94,11 @@ describe("Arduinode low level API test", function(){
       it("errがnullじゃない.", function(){
         should.exists(err);
       });
-      it("errのnameがError", function(){
-        err.name.should.equal("Error");
+      it("errのnameがIllegalApiCallError", function(){
+        err.name.should.equal("IllegalApiCallError");
       });
-      it("errのmessageがIllegal state.", function(){
-        err.message.should.equal("Illegal state.");
+      it("errのmessageがPlease call after waiting the end of the API that called earlier.", function(){
+        err.message.should.equal("Please call after waiting the end of the API that called earlier.");
       });
     });
 

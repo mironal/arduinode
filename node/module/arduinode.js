@@ -30,9 +30,9 @@ function makeCallback(cb) {
 /***
 
 
-# はじめに
+# はじめに <a name="intro">
 
-## APIの安定度
+## APIの安定度 <a name="stability">
 
 各APIには以下の3段階の安定度があります。現段階では、この安定度の段階すら変更される可能性があります。
 
@@ -46,9 +46,9 @@ function makeCallback(cb) {
 :十分にテストされた安定したAPIです。仕様が変更されることはまずありません。
 
 
-## API使用上の注意
+## API使用上の注意 <a name="attention">
 
-同時に複数のコマンドを送信すると正しく通信ができなくなります。
+APIを連続してコールする場合は、それぞれのAPIの完了を待つ必要があります.
 
 これはArduinoのシリアル受信バッファサイズが小さいため、同時に複数のコマンドを送信すると受信バッファが溢れ、送信したコマンドの文字列が破壊されるためです。
 
@@ -1034,6 +1034,7 @@ Arduinode.prototype.analogStreamOff = function(port, callback) {
 }
 
 /***
+
 # Interrupt
 
  */
@@ -1180,7 +1181,10 @@ Arduinode.prototype._send = function(command, callback){
     var timer = setInterval(function(){
       if(!self.callback){
         clearInterval(timer);
-        callback(new Error("Illegal state."));
+        var error = new Error();
+        error.name = "IllegalApiCallError";
+        error.message = "Please call after waiting the end of the API that called earlier.";
+        callback(error);
       }
     }, 10);
     return;
