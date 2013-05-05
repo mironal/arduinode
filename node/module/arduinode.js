@@ -1008,9 +1008,70 @@ Arduinode.prototype.analogStreamOff = function(port, callback) {
 
 /***
 
-# Interrupt(割込)に関する操作 <a name="interrupt">
+# Interrupt(外部割込)に関する操作 <a name="interrupt">
 
- */
+特定のポートの状態が変化したことをイベントして通知することが出来ます。
+
+スイッチの状態変化やパルスを取得するのにポーリングを行うのは効率的ではありません。
+
+外部割込みを使用することにより、効率的に状態の変化を取得出来ます。
+
+外部割込みには以下の2つの割込が使用可能です。
+
+割込番号 | Digitalポート
+---------|-------------
+0        | 2
+1        | 3
+
+
+Arduino Megaの場合は以下の6つの割込が使用可能です。
+
+割込番号 | Digitalポート
+---------|-------------
+0        | 2
+1        | 3
+2        | 21
+3        | 20
+4        | 19
+5        | 18
+
+
+※Arduinoのリファレンスも参考にして下さい.
+
+割込のイベントは"event"というイベントされ以下のコードで取得することが可能です.
+
+```js
+arduinode.on("event" function(data){
+  console.log(data);
+  // { event: 'int', data: { msg: 'OK', num: 0, count: 1 } }
+});
+```
+
+numは割込番号、countは割込発生回数です。
+割込発生回数はイベントが通知されるごとにリセット(0に戻る)されます。
+
+また、Streamイベントも同様のイベントに通知されるので、Streamイベントと併用する場合は以下のように条件分岐する必要があります.
+
+```js
+arduinode.on("event", function(data){
+  switch(data.event){
+    case "di":
+      console.log(data.data);
+      break;
+    case "ai":
+      console.log(data.data);
+      break;
+    case "int":
+      // Interrupt event !!
+      console.log(data.data);
+      break;
+  }
+});
+```
+
+このイベントの仕様は実験的であり、今後変更される場合があります。
+
+*/
 
 
 /***
