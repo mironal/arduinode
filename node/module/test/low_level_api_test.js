@@ -831,6 +831,138 @@ describe("Arduinode low level API test", function(){
       });
 
     });
+
+    // LOWはポートの状態によっては大量に割込が入って不安定になるので
+    // テストは実行しない.
+    // プルアップするなどしてから行えば安全なはず.
+    describe("Interrupt", function(){
+      describe("Attach", function(){
+        describe("正常なコマンドを送信", function(){
+          describe("interrupt0をCHANGEで有効", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/0?type=CHANGE", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが0", function(){
+              result.num.should.equal(0);
+            });
+            it("modeがCHANGE", function(){
+              result.mode.should.equal("CHANGE");
+            });
+          });
+
+          describe("interrupt1をRISINGで有効", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/1?type=RISING", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが1", function(){
+              result.num.should.equal(1);
+            });
+            it("modeがRISING", function(){
+              result.mode.should.equal("RISING");
+            });
+          });
+
+          describe("interrupt1をFALLINGで有効", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/1?type=FALLING", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが1", function(){
+              result.num.should.equal(1);
+            });
+            it("modeがFALLING", function(){
+              result.mode.should.equal("FALLING");
+            });
+          });
+        });
+
+        describe("不正なコマンドを送信", function(){
+          describe("不正な割込番号を指定", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/10?type=CANGE", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnullじゃない", function(){
+              should.exists(err);
+            });
+            it("errのnameがCommand error.", function(){
+              err.name.should.equal("Command error.");
+            });
+
+            it("errのmessageがIllegal interrupt number.", function(){
+              err.message.should.equal("Illegal interrupt number.");
+            });
+          });
+
+          describe("不正な割込mode", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/0?type=AAAA", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnullじゃない", function(){
+              should.exists(err);
+            });
+            it("errのnameがCommand error.", function(){
+              err.name.should.equal("Command error.");
+            });
+
+            it("errのmessageがIllegal type.", function(){
+              err.message.should.equal("Illegal type.");
+            });
+          });
+
+        });
+      });
+
+      describe("Detach", function(){
+
+      });
+    });
   });
 
   after(function(done){
