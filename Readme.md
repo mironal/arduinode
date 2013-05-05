@@ -62,7 +62,7 @@ arduinode = new Arduinode(portName, function(){
 
 ### Example application
 
-**[Come here!](node/example/Readme.md)**
+**[Come here!](example/Readme.md)**
 
 
 # どのように操作が出来るのか？

@@ -2,7 +2,7 @@
 
 var should = require("should");
 
-var Arduinode = require("../arduinode").Arduinode;
+var Arduinode = require("../../arduinode").Arduinode;
 
 var portName = "/dev/tty.usbmodem1411";
 
