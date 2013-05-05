@@ -209,7 +209,7 @@ function Arduinode(portname, callback){
   });
 
   self.sp.on("close", function(err, data){
-    self.emit("close");
+    self.emit("close", err, data);
   });
 
   // arduinoは\r\nを返してくる.
@@ -1125,7 +1125,10 @@ Arduinode.prototype._send = function(command, callback){
     var error = new Error();
     error.name = "Command error.";
     error.message = "Command is too long.";
-    return callback(error);
+    process.nextTick(function(){
+      callback(error);
+    });
+    return;
   }
 
   if(self.callback){
@@ -1134,7 +1137,20 @@ Arduinode.prototype._send = function(command, callback){
     // このエラーの発生原因はユーザプログラムではなくモジュールのバグなので
     // 通常発生することはない.
     // 発生した場合は報告して下さい.
-    return callback(new Error("Illegal state."));
+
+
+    // コマンドA -> コマンドBと実行した場合、コマンドAの完了を待たずに
+    // コマンドBでErrorのコールバックを呼んでしまうと、更に次のコマンドを
+    // 実行するときにコマンドAの完了するタイミングを知ることが出来なくなってしまうので
+    // コマンドAの実行が終わったタイミングでコマンドBにErrorでコールバックを呼ぶ.
+    // バグに対するバグ回避策なので通常は気にしなくて良い.
+    var timer = setInterval(function(){
+      if(!self.callback){
+        clearInterval(timer);
+        callback(new Error("Illegal state."));
+      }
+    }, 10);
+    return;
   }
 
   self.callback = callback;
@@ -1144,11 +1160,15 @@ Arduinode.prototype._send = function(command, callback){
 
 Arduinode.prototype._execCallback = function(err, result){
   var self = this;
-  var callback = self.callback;
-  self.callback = null;
-  process.nextTick(function(){
-    callback(err, result);
-  });
+  if(self.callback){
+    var callback = self.callback;
+    self.callback = null;
+    process.nextTick(function(){
+      callback(err, result);
+    });
+  }else{
+    throw Error("callback is " + self.callback);
+  }
 }
 
 module.exports.Arduinode = Arduinode;
