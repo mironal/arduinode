@@ -11,6 +11,8 @@
 // 各々のコマンドに対して処理を行う関数の型
 typedef char* (*TASK_FUNC_PTR)(String str);
 
+typedef void (*VOID_FUNC_PTR)(void);
+
 // コマンドの文字列の先頭の文字と処理する関数を保持する構造体
 struct TASK_FUNC {
   char* prefix;
@@ -74,17 +76,48 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
   {"EXTERNAL", EXTERNAL}
 };
 
+const struct STR_UINT8_PEAR INTERRUPT_MODE_TBL[] = {
+  {"LOW", LOW},
+  {"CHANGE", CHANGE},
+  {"RISING", RISING},
+  {"FALLING", FALLING}
+};
+
+volatile uint32_t interrupt_counter[2] = {0};
+void interrupt0(void){
+  ++interrupt_counter[0];
+}
+
+void interrupt1(void){
+  ++interrupt_counter[1];
+}
+
+const VOID_FUNC_PTR INTERRUPT_FUNC_TBL[] = {
+  interrupt0,
+  interrupt1,
+};
+
 #endif
 
 const prog_char ILLEGAL_COMMAND[] PROGMEM       = "Illegal command.";
 const prog_char ILLEGAL_TYPE[] PROGMEM          = "Illegal type.";
 const prog_char ILLEGAL_QUERY[] PROGMEM         = "Illegal query.";
 const prog_char ILLEGAL_VALUE[] PROGMEM         = "Illegal value.";
+const prog_char ILLEGAL_INTR_NUMBER[] PROGMEM   = "Illegal interrupt number.";
 const prog_char ILLEGAL_PORT_NUMBER[] PROGMEM   = "Illegal port number.";
 const prog_char QUERY_NOT_FOUND[] PROGMEM       = "Query not found.";
 const prog_char TYPE_IS_NOT_SPECIFIED[] PROGMEM = "type is not specified.";
 const prog_char VAL_IS_NOT_SPECIFIED[] PROGMEM  = "val is not specified.";
 const prog_char COMMAND_IS_TOO_LONG[] PROGMEM   = "Command is too long.";
+
+const prog_char JSON_FORMAT_NG[] PROGMEM               = "{\"msg\":\"NG\",\"error\":\"%s\"}";
+const prog_char JSON_FORMAT_SWITCH_TYPE[] PROGMEM      = "{\"msg\":\"OK\",\"type\":\"%s\"}";
+const prog_char JSON_FORMAT_WRAP_EVENT[] PROGMEM       = "{\"event\":\"%s\",\"data\":%s}";
+const prog_char JSON_FORMAT_INTERRUPT[] PROGMEM        = "{\"msg\":\"OK\",\"num\":%d,\"count\":%d}";
+const prog_char JSON_FORMAT_ATTACH_INTERRUPT[] PROGMEM = "{\"msg\":\"OK\",\"num\":%d,\"mode\":\"%s\"}";
+const prog_char JSON_FORMAT_DETACH_INTERRUPT[] PROGMEM = "{\"msg\":\"OK\",\"num\":%d}";
+const prog_char JSON_FORMAT_IO[] PROGMEM               = "{\"msg\":\"OK\",\"port\":%d,\"val\":%d}";
+const prog_char JSON_FORMAT_READY[] PROGMEM            = "{\"msg\":\"READY\"}";
 
 // リクエスト受信バッファ
 char read_buf[128];
@@ -158,6 +191,32 @@ const struct TASK_FUNC TASK_FUNC_TBL[] = {
      example => d/mode/3?type=INPUT
    */
   {"d/mode/", &switchPinModeTask},
+
+
+  /*
+     attachInterrupt
+     format  => d/int/on/{num}?type={type}
+     {num}   => number of interrupt.
+     {type}  => LOW | CHANGE | RISING | FALLING
+     example => d/int/on/0?type=LOW
+
+     LOW ピンがLOWのとき発生
+     CHANGE ピンの状態が変化したときに発生
+     RISING ピンの状態がLOWからHIGHに変わったときに発生
+     FALLING ピンの状態がHIGHからLOWに変わったときに発生
+
+     // TODO: typeじゃなくてmodeにしたい
+   */
+  {"d/int/on/", &attachInterruptTask},
+
+
+  /*
+     detachInterrupt
+     format  => d/int/off/{num}
+     {num}   => number of interrupt.
+     example => d/int/off/0
+   */
+  {"d/int/off/", &detachInterruptTask},
 
   /*
     DI連続転送ON
@@ -267,7 +326,15 @@ void loop() {
     }
   }
 
+  for(uint8_t i = 0; i < ARRAYSIZE(interrupt_counter); i++){
+    if(interrupt_counter[i] > 0){
+      Serial.println(wrapEventJson("int", interruptJson(i, interrupt_counter[i])));
+      interrupt_counter[i] = 0;
+    }
+  }
+
 }
+
 
 char* task(String msg){
   // 関数テーブルからタスクを決定する.
@@ -523,6 +590,52 @@ char* streamAiOffTask(String query){
 }
 
 
+/*
+   LOWは何も繋げていないと大量に割込が入ってくるので注意
+*/
+char* attachInterruptTask(String queryWithType){
+
+  char type[16 + 1] = {0};
+  uint8_t num = 0;
+
+  char* error = checkPortWithType(queryWithType, &num, &type[0]);
+  if(error){
+    return error;
+  }
+
+  error = checkInterruptRange(num);
+  if(error){
+    return error;
+  }
+
+  for(uint8_t i = 0; i < ARRAYSIZE(INTERRUPT_MODE_TBL); i++){
+    if(strcmp(type, INTERRUPT_MODE_TBL[i].key) == 0){
+      attachInterrupt(num, INTERRUPT_FUNC_TBL[num], INTERRUPT_MODE_TBL[i].value);
+      return okAttachInterruptJson(num, i);
+    }
+  }
+
+  return NgReturnJson(ILLEGAL_TYPE);
+}
+
+char* detachInterruptTask(String queryWithPort){
+
+  char* error = checkPortQuery(queryWithPort);
+  if(error){
+    return error;
+  }
+
+  uint8_t num = strToInt(queryWithPort);
+
+  error = checkInterruptRange(num);
+  if(error){
+    return error;
+  }
+
+  detachInterrupt(num);
+  return okDetachInterruptJson(num);
+}
+
 // スタックオーバーフローにより強制的にリセット
 char* resetTask(String empty){
   resetTask("");
@@ -612,19 +725,60 @@ int intPow(int base, int e){
 
 
 char* initJson(){
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_READY);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"READY\"}");
+      format_buf
+      );
 
   return RESULT_MSG_PTR;
 }
 
 char* okIoJson(uint8_t port, uint16_t val){
 
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_IO);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"OK\",\"port\":%d,\"val\":%d}",
+      format_buf,
       port,
       val);
 
+  return RESULT_MSG_PTR;
+}
+
+char* okAttachInterruptJson(uint8_t num, uint8_t mode){
+
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_ATTACH_INTERRUPT);
+
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      format_buf,
+      num,
+      INTERRUPT_MODE_TBL[mode].key);
+  return RESULT_MSG_PTR;
+}
+
+char* okDetachInterruptJson(uint8_t num){
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_DETACH_INTERRUPT);
+
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      format_buf,
+      num);
+  return RESULT_MSG_PTR;
+}
+
+char* interruptJson(uint8_t num, uint32_t count){
+
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_INTERRUPT);
+
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      format_buf,
+      num,
+      count);
   return RESULT_MSG_PTR;
 }
 
@@ -640,8 +794,11 @@ char* wrapEventJson(char* type, char* dataJson){
   char buf[64] = {0};
   strcpy(buf, dataJson);
 
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_WRAP_EVENT);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"event\":\"%s\",\"data\":%s}",
+      format_buf,
       type,
       buf);
   return RESULT_MSG_PTR;
@@ -650,8 +807,11 @@ char* wrapEventJson(char* type, char* dataJson){
 
 char* switchTypeReturnJson(char* refType){
 
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_SWITCH_TYPE);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"OK\",\"type\":\"%s\"}",
+      format_buf,
       refType);
 
   return RESULT_MSG_PTR;
@@ -662,8 +822,11 @@ char* NgReturnJson(const prog_char *err){
   char buf[30] = {0};
   strcpy_P(buf, err);
 
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_NG);
+
   snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
-      "{\"msg\":\"NG\",\"error\":\"%s\"}",
+      format_buf,
       buf);
 
   return RESULT_MSG_PTR;
@@ -738,6 +901,30 @@ char* checkPortWithInterval(String portWithInterval, uint8_t *port, uint64_t *in
   return NULL;
 }
 
+// {port}?type={type string}なqueryを分解.
+// typeのバッファに16文字コピーを行うので、
+// typeのバッファサイズは16以上にすること。
+// またtypeの文字列は16文字未満の文字列とすること.
+char* checkPortWithType(String portWithType, uint8_t *port, char *type){
+  String typeQuery;
+
+  char* error = checkPortWithQuery(portWithType, port, &typeQuery);
+  if(error){
+    return error;
+  }
+
+  if(typeQuery.startsWith("type=")){
+    typeQuery.replace("type=", "");
+    if(typeQuery.length() > 16){
+      return NgReturnJson(ILLEGAL_QUERY);
+    }
+    typeQuery.toCharArray(type, 16);
+  }else{
+    return NgReturnJson(ILLEGAL_QUERY);
+  }
+  return NULL;
+}
+
 char* checkPortWithValue(String portWithValue, uint8_t *port, int *val){
 
   String valQuery;
@@ -782,6 +969,12 @@ char* checkPortRange(uint8_t port){
   return NgReturnJson(ILLEGAL_PORT_NUMBER);
 }
 
+char* checkInterruptRange(uint8_t num){
+  if(num >= ARRAYSIZE(INTERRUPT_FUNC_TBL)){
+    return NgReturnJson(ILLEGAL_INTR_NUMBER);
+  }
+  return NULL;
+}
 
 /**************************************************************************
                         タイマ割り込みに関するｱﾚ

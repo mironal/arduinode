@@ -224,6 +224,48 @@ var tests = [
   send:false
 },
 {
+  name:"Attach Interrupt. CHANGE",
+  cmd:"d/int/on/0?type=CHANGE",
+  expect:JSON.stringify({msg:"OK", num:0, mode:"CHANGE"}),
+  send:false
+},
+{
+  name:"Attach Interrupt. RISING",
+  cmd:"d/int/on/1?type=RISING",
+  expect:JSON.stringify({msg:"OK", num:1, mode:"RISING"}),
+  send:false
+},
+{
+  name:"Attach Interrupt. Illegal type.",
+  cmd:"d/int/on/1?type=AAA",
+  expect:JSON.stringify({msg:"NG", error:"Illegal type."}),
+  send:false
+},
+{
+  name:"Attach Interrupt. Illegal number.",
+  cmd:"d/int/on/10?type=CHANGE",
+  expect:JSON.stringify({msg:"NG", error:"Illegal interrupt number."}),
+  send:false
+},
+{
+  name:"Detach Interrupt.",
+  cmd:"d/int/off/0",
+  expect:JSON.stringify({msg:"OK", num:0}),
+  send:false
+},
+{
+  name:"Detach Interrupt.",
+  cmd:"d/int/off/1",
+  expect:JSON.stringify({msg:"OK", num:1}),
+  send:false
+},
+{
+  name:"Detach Interrupt. Illegal number.",
+  cmd:"d/int/off/10",
+  expect:JSON.stringify({msg:"NG", error:"Illegal interrupt number."}),
+  send:false
+},
+{
   name:"Too long command.",
   cmd:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   expect:JSON.stringify({msg:"NG", error:"Command is too long."}),

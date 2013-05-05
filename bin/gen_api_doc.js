@@ -27,8 +27,36 @@ var level2Header = new RegExp(/^## .*$/);
 
 console.log("# 目次");
 
+var lastPreLine = false;
 for(var i = 0; i < contents.length; i++){
   var c = contents[i];
+
+  if(c === "```js" || c === "```c" || c === "```sh"){
+    if(i > 0){
+      if(contents[i - 1].length !== 0){
+        var error = new Error();
+        error.name = "InvalidFormatError";
+        error.message = "line : " + i;
+        throw error;
+      }
+    }
+  }
+
+
+
+  // ```の次の行が空行であることをチェック
+  if(c === "```"){
+    lastPreLine = true;
+  }else if(lastPreLine === true && c.length === 0){
+    lastPreLine = false;
+  }else if(lastPreLine === true && c.length !== 0){
+    var error = new Error();
+    error.name = "InvalidFormatError";
+    error.message = "line : " + i;
+    throw error;
+  }
+
+
   if(level1Header.test(c)){
     var title = c.match(/# (.*) </);
     var name = c.match(/<a name="(.*)">/);

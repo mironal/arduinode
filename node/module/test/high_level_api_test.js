@@ -509,6 +509,168 @@ describe("Arduinode high level API test", function(){
       });
     });
   });
+
+
+  describe("Interrupt", function(){
+    describe("正常なコマンドを送信", function(){
+      describe("attachInterrupt(0, \"CHANGE\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.attachInterrupt(0, "CHANGE", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("numが0", function(){
+          result.num.should.equal(0);
+        });
+        it("modeがCHANGE", function(){
+          result.mode.should.equal("CHANGE");
+        });
+      });
+
+      describe("attachInterrupt(1, \"CHANGE\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.attachInterrupt(1, "CHANGE", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("numが0", function(){
+          result.num.should.equal(1);
+        });
+        it("modeがCHANGE", function(){
+          result.mode.should.equal("CHANGE");
+        });
+      });
+
+      describe("detachInterrupt(0)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.detachInterrupt(0, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("numが0", function(){
+          result.num.should.equal(0);
+        });
+      });
+
+      describe("detachInterrupt(1)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.detachInterrupt(1, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("numが1", function(){
+          result.num.should.equal(1);
+        });
+      });
+    });
+
+    describe("不正なコマンドを送信", function(){
+      describe("attachInterrupt(\"1\", \"CHANGE\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.attachInterrupt("1", "CHANGE", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnullじゃない", function(){
+          should.exists(err);
+        });
+        it("errのnameがTypeError", function(){
+          err.name.should.equal("TypeError");
+        });
+        it("errのmessageがnum must be a number", function(){
+          err.message.should.equal("num must be a number");
+        });
+      });
+
+      describe("attachInterrupt(0, 1)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.attachInterrupt(0, 1, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnullじゃない", function(){
+          should.exists(err);
+        });
+        it("errのnameがTypeError", function(){
+          err.name.should.equal("TypeError");
+        });
+        it("errのmessageがmode must be a number", function(){
+          err.message.should.equal("mode must be a string");
+        });
+      });
+
+      describe("detachInterrupt(\"1\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.detachInterrupt("1", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnullじゃない", function(){
+          should.exists(err);
+        });
+        it("errのnameがTypeError", function(){
+          err.name.should.equal("TypeError");
+        });
+        it("errのmessageがmode must be a number", function(){
+          err.message.should.equal("num must be a number");
+        });
+      });
+
+    });
+  });
+
   after(function(done){
     arduinode.close(function(){
       done();
