@@ -961,7 +961,76 @@ describe("Arduinode low level API test", function(){
 
       describe("Detach", function(){
 
+        describe("正常なコマンドを送信", function(){
+          describe("interrupt0を無効化", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/off/0", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが0", function(){
+              result.num.should.equal(0);
+            });
+          });
+
+          describe("interrupt1を無効化", function(e, r){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/off/1", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが1", function(){
+              result.num.should.equal(1);
+            });
+          });
+        });
+
+        describe("不正なコマンドを送信", function(){
+          describe("不正な割込番号を指定", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/off/10", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnullじゃない", function(){
+              should.exists(err);
+            });
+            it("errのnameがCommand error.", function(){
+              err.name.should.equal("Command error.");
+            });
+
+            it("errのmessageがIllegal interrupt number.", function(){
+              err.message.should.equal("Illegal interrupt number.");
+            });
+
+          });
+        });
       });
+
     });
   });
 
