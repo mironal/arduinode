@@ -103,6 +103,7 @@ const prog_char ILLEGAL_COMMAND[] PROGMEM       = "Illegal command.";
 const prog_char ILLEGAL_TYPE[] PROGMEM          = "Illegal type.";
 const prog_char ILLEGAL_QUERY[] PROGMEM         = "Illegal query.";
 const prog_char ILLEGAL_VALUE[] PROGMEM         = "Illegal value.";
+const prog_char ILLEGAL_INTR_NUMBER[] PROGMEM   = "Illegal interrupt number.";
 const prog_char ILLEGAL_PORT_NUMBER[] PROGMEM   = "Illegal port number.";
 const prog_char QUERY_NOT_FOUND[] PROGMEM       = "Query not found.";
 const prog_char TYPE_IS_NOT_SPECIFIED[] PROGMEM = "type is not specified.";
@@ -601,9 +602,9 @@ char* attachInterruptTask(String queryWithType){
     return error;
   }
 
-  if(num >= ARRAYSIZE(INTERRUPT_FUNC_TBL)){
-    // ポートじゃないので後で別のエラーを作る.
-    return NgReturnJson(ILLEGAL_PORT_NUMBER);
+  error = checkInterruptRange(num);
+  if(error){
+    return error;
   }
 
   for(uint8_t i = 0; i < ARRAYSIZE(INTERRUPT_MODE_TBL); i++){
@@ -624,6 +625,12 @@ char* detachInterruptTask(String queryWithPort){
   }
 
   uint8_t num = strToInt(queryWithPort);
+
+  error = checkInterruptRange(num);
+  if(error){
+    return error;
+  }
+
   detachInterrupt(num);
 }
 
@@ -950,6 +957,12 @@ char* checkPortRange(uint8_t port){
   return NgReturnJson(ILLEGAL_PORT_NUMBER);
 }
 
+char* checkInterruptRange(uint8_t num){
+  if(num >= ARRAYSIZE(INTERRUPT_FUNC_TBL)){
+    return NgReturnJson(ILLEGAL_INTR_NUMBER);
+  }
+  return NULL;
+}
 
 /**************************************************************************
                         タイマ割り込みに関するｱﾚ
