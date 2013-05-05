@@ -1,0 +1,11 @@
+{
+  "name": "module_test" ,
+  "private": true ,
+  "dependencies": {
+    "should" : "*",
+    "commander" : "*",
+    "async" : "*",
+    "underscore" : "*",
+    "serialport" : "*"
+  }
+}
