@@ -115,6 +115,7 @@ const prog_char JSON_FORMAT_SWITCH_TYPE[] PROGMEM      = "{\"msg\":\"OK\",\"type
 const prog_char JSON_FORMAT_WRAP_EVENT[] PROGMEM       = "{\"event\":\"%s\",\"data\":%s}";
 const prog_char JSON_FORMAT_INTERRUPT[] PROGMEM        = "{\"msg\":\"OK\",\"num\":%d,\"count\":%d}";
 const prog_char JSON_FORMAT_ATTACH_INTERRUPT[] PROGMEM = "{\"msg\":\"OK\",\"num\":%d,\"mode\":\"%s\"}";
+const prog_char JSON_FORMAT_DETACH_INTERRUPT[] PROGMEM = "{\"msg\":\"OK\",\"num\":%d}";
 const prog_char JSON_FORMAT_IO[] PROGMEM               = "{\"msg\":\"OK\",\"port\":%d,\"val\":%d}";
 const prog_char JSON_FORMAT_READY[] PROGMEM            = "{\"msg\":\"READY\"}";
 
@@ -632,6 +633,7 @@ char* detachInterruptTask(String queryWithPort){
   }
 
   detachInterrupt(num);
+  return okDetachInterruptJson(num);
 }
 
 // スタックオーバーフローにより強制的にリセット
@@ -755,6 +757,16 @@ char* okAttachInterruptJson(uint8_t num, uint8_t mode){
       format_buf,
       num,
       INTERRUPT_MODE_TBL[mode].key);
+  return RESULT_MSG_PTR;
+}
+
+char* okDetachInterruptJson(uint8_t num){
+  char format_buf[64] = {0};
+  strcpy_P(format_buf, JSON_FORMAT_DETACH_INTERRUPT);
+
+  snprintf(result_msg_buf, ARRAYSIZE(result_msg_buf),
+      format_buf,
+      num);
   return RESULT_MSG_PTR;
 }
 
