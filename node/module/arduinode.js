@@ -1034,6 +1034,39 @@ Arduinode.prototype.analogStreamOff = function(port, callback) {
 }
 
 /***
+# Interrupt
+
+ */
+
+Arduinode.prototype.attachInterrupt = function(num, mode, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof mode !== "string"){
+    return callback(new TypeError("mode must be a string"));
+  }
+
+  if(typeof num !== "number"){
+    return callback(new TypeError("num must be a number"));
+  }
+
+  var self = this;
+  self._send("d/int/on/" + num + "?type=" + mode, callback);
+}
+
+Arduinode.prototype.detachInterrupt = function(num, callback) {
+
+  callback = makeCallback(callback);
+
+  if(typeof num !== "number"){
+    return callback(new TypeError("num must be a number"));
+  }
+
+  var self = this;
+  self._send("d/int/off/" + num, callback);
+}
+
+/***
 
 # Arduinoそのものに関する操作 <a name="system">
 
