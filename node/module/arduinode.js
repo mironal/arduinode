@@ -1083,7 +1083,7 @@ Arduinode.prototype.close = function(callback) {
   });
 }
 
-// 後でUtility関数としてドキュメントを書く
+// TODO: 後でUtility関数としてドキュメントを書く
 Arduinode.prototype.list = function(callback) {
   require("serialport").list(callback);
 }
