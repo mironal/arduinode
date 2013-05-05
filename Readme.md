@@ -11,7 +11,7 @@ No programming of Arduino. application can make only node.js.
 
 # 使い方
 
-## GeneralIoSerial.ino
+## arduinode.ino
 
 ソースコードを入手し、お手持ちのarduinoに書き込むだけで準備完了です。
 
