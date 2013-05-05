@@ -49,7 +49,7 @@ $(function(){
     if( allow === "<"){
       var now = parseInt(self.text());
       var to = {port:0, val:0};
-      to.port = self.attr("id").replace("d", "");
+      to.port = parseInt(self.attr("id").replace("d", ""));
       if(now === 0){
         to.val = 1;
       }
