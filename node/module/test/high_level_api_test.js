@@ -69,31 +69,6 @@ describe("Arduinode high level API test", function(){
             result.should.have.property("val");
           });
         });
-        // ポート番号のチェックはしていないので
-        // arduinoに存在しないポートでも一応動く.
-        describe("port = 10", function(){
-          var err;
-          var result;
-          before(function(done){
-            arduinode.analogRead(10, function(e, r){
-              err = e;
-              result = r;
-              done();
-            });
-          });
-          it("errがnull", function(){
-            should.not.exists(err);
-          });
-          it("msgがOK", function(){
-            result.should.have.property("msg", "OK");
-          });
-          it("portが10", function(){
-            result.should.have.property("port",10);
-          });
-          it("valというプロパティがある", function(){
-            result.should.have.property("val");
-          });
-        });
       });
     });
 
@@ -161,6 +136,80 @@ describe("Arduinode high level API test", function(){
           it("typeがDEFAULT", function(){
             result.type.should.equal("DEFAULT");
           });
+        });
+      });
+    });
+
+    describe("Stream", function(){
+      describe("analogStreamOn(0, 500)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.analogStreamOn(0, 500, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("portが0", function(){
+          result.port.should.equal(0);
+        });
+        it("valが1", function(){
+          result.val.should.equal(1);
+        });
+      });
+
+      describe("analogStreamOff(0)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.analogStreamOff(0, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("portが0", function(){
+          result.port.should.equal(0);
+        });
+        it("valが0", function(){
+          result.val.should.equal(0);
+        });
+      });
+
+      describe("analogStreamOff(\"all\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.analogStreamOff("all", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("portが255", function(){
+          result.port.should.equal(255);
+        });
+        it("valが0", function(){
+          result.val.should.equal(0);
         });
       });
     });
@@ -384,6 +433,241 @@ describe("Arduinode high level API test", function(){
           });
         });
       });
+    });
+  });
+
+  describe("Stream", function(){
+    describe("digitalStreamOn(0, 100)", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.digitalStreamOn(0, 100, function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnull", function(){
+        should.not.exists(err);
+      });
+      it("msgがOK", function(){
+        result.msg.should.equal("OK");
+      });
+      it("portが0", function(){
+        result.port.should.equal(0);
+      });
+      it("valが1", function(){
+        result.val.should.equal(1);
+      });
+    });
+
+    describe("digitalStreamOff(0)", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.digitalStreamOff(0, function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnull", function(){
+        should.not.exists(err);
+      });
+      it("msgがOK", function(){
+        result.msg.should.equal("OK");
+      });
+      it("portが0", function(){
+        result.port.should.equal(0);
+      });
+      it("valが0", function(){
+        result.val.should.equal(0);
+      });
+    });
+
+    describe("digitalStreamOff(\"all\")", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.digitalStreamOff("all", function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnull", function(){
+        should.not.exists(err);
+      });
+      it("msgがOK", function(){
+        result.msg.should.equal("OK");
+      });
+      it("portが255", function(){
+        result.port.should.equal(255);
+      });
+      it("valが0", function(){
+        result.val.should.equal(0);
+      });
+    });
+  });
+
+
+  describe("Interrupt", function(){
+    describe("正常なコマンドを送信", function(){
+      describe("attachInterrupt(0, \"CHANGE\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.attachInterrupt(0, "CHANGE", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("numが0", function(){
+          result.num.should.equal(0);
+        });
+        it("modeがCHANGE", function(){
+          result.mode.should.equal("CHANGE");
+        });
+      });
+
+      describe("attachInterrupt(1, \"CHANGE\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.attachInterrupt(1, "CHANGE", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("numが0", function(){
+          result.num.should.equal(1);
+        });
+        it("modeがCHANGE", function(){
+          result.mode.should.equal("CHANGE");
+        });
+      });
+
+      describe("detachInterrupt(0)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.detachInterrupt(0, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("numが0", function(){
+          result.num.should.equal(0);
+        });
+      });
+
+      describe("detachInterrupt(1)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.detachInterrupt(1, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnull", function(){
+          should.not.exists(err);
+        });
+        it("msgがOK", function(){
+          result.msg.should.equal("OK");
+        });
+        it("numが1", function(){
+          result.num.should.equal(1);
+        });
+      });
+    });
+
+    describe("不正なコマンドを送信", function(){
+      describe("attachInterrupt(\"1\", \"CHANGE\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.attachInterrupt("1", "CHANGE", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnullじゃない", function(){
+          should.exists(err);
+        });
+        it("errのnameがTypeError", function(){
+          err.name.should.equal("TypeError");
+        });
+        it("errのmessageがnum must be a number", function(){
+          err.message.should.equal("num must be a number");
+        });
+      });
+
+      describe("attachInterrupt(0, 1)", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.attachInterrupt(0, 1, function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnullじゃない", function(){
+          should.exists(err);
+        });
+        it("errのnameがTypeError", function(){
+          err.name.should.equal("TypeError");
+        });
+        it("errのmessageがmode must be a number", function(){
+          err.message.should.equal("mode must be a string");
+        });
+      });
+
+      describe("detachInterrupt(\"1\")", function(){
+        var err;
+        var result;
+        before(function(done){
+          arduinode.detachInterrupt("1", function(e, r){
+            err = e;
+            result = r;
+            done();
+          });
+        });
+        it("errがnullじゃない", function(){
+          should.exists(err);
+        });
+        it("errのnameがTypeError", function(){
+          err.name.should.equal("TypeError");
+        });
+        it("errのmessageがmode must be a number", function(){
+          err.message.should.equal("num must be a number");
+        });
+      });
+
     });
   });
 

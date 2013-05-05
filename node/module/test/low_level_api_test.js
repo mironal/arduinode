@@ -37,6 +37,71 @@ describe("Arduinode low level API test", function(){
       });
     });
 
+    describe("Illegal type コマンド", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.send(1, function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnullじゃない.", function(){
+        should.exists(err);
+      });
+      it("errのnameがTypeError", function(){
+        err.name.should.equal("TypeError");
+      });
+      it("errのmessageがcommand must be a string.", function(){
+        err.message.should.equal("command must be a string.");
+      });
+    });
+
+    describe("nullコマンド", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.send(null, function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnullじゃない.", function(){
+        should.exists(err);
+      });
+      it("errのnameがError", function(){
+        err.name.should.equal("Error");
+      });
+      it("errのmessageが command is required.", function(){
+        err.message.should.equal("command is required.");
+      });
+    });
+
+
+    describe("Illegal state command.", function(){
+      var err;
+      var result;
+      before(function(done){
+        arduinode.send("a", function(e, r){});
+        arduinode.send("b", function(e, r){
+          err = e;
+          result = r;
+          done();
+        });
+      });
+      it("errがnullじゃない.", function(){
+        should.exists(err);
+      });
+      it("errのnameがIllegalApiCallError", function(){
+        err.name.should.equal("IllegalApiCallError");
+      });
+      it("errのmessageがPlease call after waiting the end of the API that called earlier.", function(){
+        err.message.should.equal("Please call after waiting the end of the API that called earlier.");
+      });
+    });
+
     describe("空の文字", function(){
       var err;
       var result;
@@ -50,11 +115,11 @@ describe("Arduinode low level API test", function(){
       it("errがnullじゃない.", function(){
         should.exists(err);
       });
-      it("errのnameがCommand error.", function(){
-        err.name.should.equal("Command error.");
+      it("errのnameがError", function(){
+        err.name.should.equal("Error");
       });
-      it("errのmessageがIllegal command", function(){
-        err.message.should.equal("Illegal command.");
+      it("errのmessageが command is required.", function(){
+        err.message.should.equal("command is required.");
       });
     });
 
@@ -84,11 +149,11 @@ describe("Arduinode low level API test", function(){
   describe("Analog", function(){
     describe("Write", function(){
       describe("正常なコマンドを送信", function(){
-        describe("ao/write/0?val=25", function(){
+        describe("a/write/0?val=25", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ao/write/0?val=25", function(e, r){
+            arduinode.send("a/write/0?val=25", function(e, r){
               err = e;
               result = r;
               done();
@@ -114,7 +179,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ao/write/a?val=25", function(e, r){
+            arduinode.send("a/write/a?val=25", function(e, r){
               err = e;
               result = r;
               done();
@@ -136,7 +201,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ao/write/0", function(e, r){
+            arduinode.send("a/write/0", function(e, r){
               err = e;
               result = r;
               done();
@@ -157,7 +222,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ao/write/0?hoge=25", function(e, r){
+            arduinode.send("a/write/0?hoge=25", function(e, r){
               err = e;
               result = r;
               done();
@@ -178,11 +243,11 @@ describe("Arduinode low level API test", function(){
 
     describe("Read", function(){
       describe("正常なコマンドを送信", function(){
-        describe("ai/read/0", function(){
+        describe("a/read/0", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/read/0", function(e, r){
+            arduinode.send("a/read/0", function(e, r){
               err = e;
               result = r;
               done();
@@ -203,27 +268,27 @@ describe("Arduinode low level API test", function(){
         });
         // ポート番号のチェックはしていないので
         // arduinoに存在しないポートでも一応動く.
-        describe("ai/read/10", function(){
+        // 下記コミット以降ポートチェックをするようにした.
+        // 05c847d9c026b67930158664e3f931690c7f5d0f
+        describe("a/read/100", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/read/10", function(e, r){
+            arduinode.send("a/read/100", function(e, r){
               err = e;
               result = r;
               done();
             });
           });
-          it("errがnull", function(){
-            should.not.exists(err);
+
+          it("errがnullじゃない", function(){
+            should.exists(err);
           });
-          it("msgがOK", function(){
-            result.should.have.property("msg", "OK");
+          it("errのnameがCommand error.", function(){
+            err.name.should.equal("Command error.");
           });
-          it("portが10", function(){
-            result.should.have.property("port",10);
-          });
-          it("valというプロパティがある", function(){
-            result.should.have.property("val");
+          it("errのmessageがIllegal port number..", function(){
+            err.message.should.equal("Illegal port number.");
           });
         });
       });
@@ -233,7 +298,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/read/a", function(e, r){
+            arduinode.send("a/read/a", function(e, r){
               err = e;
               result = r;
               done();
@@ -260,7 +325,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref?type=INTERNAL", function(e, r){
+            arduinode.send("a/ref?type=INTERNAL", function(e, r){
               err = e;
               result = r;
               done();
@@ -281,7 +346,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref?type=EXTERNAL", function(e, r){
+            arduinode.send("a/ref?type=EXTERNAL", function(e, r){
               err = e;
               result = r;
               done();
@@ -302,7 +367,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref?type=DEFAULT", function(e, r){
+            arduinode.send("a/ref?type=DEFAULT", function(e, r){
               err = e;
               result = r;
               done();
@@ -326,7 +391,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref?type=aaaaa", function(e, r){
+            arduinode.send("a/ref?type=aaaaa", function(e, r){
               err = e;
               result = r;
               done();
@@ -346,7 +411,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("ai/ref", function(e, r){
+            arduinode.send("a/ref", function(e, r){
               err = e;
               result = r;
               done();
@@ -505,7 +570,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/3?val=1", function(e, r){
+            arduinode.send("d/write/3?val=1", function(e, r){
               err = e;
               result = r;
               done();
@@ -529,7 +594,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/4?val=0", function(e, r){
+            arduinode.send("d/write/4?val=0", function(e, r){
               err = e;
               result = r;
               done();
@@ -553,7 +618,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/5?val=HIGH", function(e, r){
+            arduinode.send("d/write/5?val=HIGH", function(e, r){
               err = e;
               result = r;
               done();
@@ -577,7 +642,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/6?val=LOW", function(e, r){
+            arduinode.send("d/write/6?val=LOW", function(e, r){
               err = e;
               result = r;
               done();
@@ -601,7 +666,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/7?val=20", function(e, r){
+            arduinode.send("d/write/7?val=20", function(e, r){
               err = e;
               result = r;
               done();
@@ -627,7 +692,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/a?val=HIGH", function(e, r){
+            arduinode.send("d/write/a?val=HIGH", function(e, r){
               err = e;
               result = r;
               done();
@@ -649,7 +714,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/0", function(e, r){
+            arduinode.send("d/write/0", function(e, r){
               err = e;
               result = r;
               done();
@@ -671,7 +736,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/0?val=hoge", function(e, r){
+            arduinode.send("d/write/0?val=hoge", function(e, r){
               err = e;
               result = r;
               done();
@@ -693,7 +758,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("do/write/0?hoge", function(e, r){
+            arduinode.send("d/write/0?hoge", function(e, r){
               err = e;
               result = r;
               done();
@@ -719,7 +784,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("di/read/1", function(e, r){
+            arduinode.send("d/read/1", function(e, r){
               err = e;
               result = r;
               done();
@@ -745,7 +810,7 @@ describe("Arduinode low level API test", function(){
           var err;
           var result;
           before(function(done){
-            arduinode.send("di/read/a", function(e, r){
+            arduinode.send("d/read/a", function(e, r){
               err = e;
               result = r;
               done();
@@ -763,6 +828,207 @@ describe("Arduinode low level API test", function(){
           });
         });
 
+      });
+
+    });
+
+    // LOWはポートの状態によっては大量に割込が入って不安定になるので
+    // テストは実行しない.
+    // プルアップするなどしてから行えば安全なはず.
+    describe("Interrupt", function(){
+      describe("Attach", function(){
+        describe("正常なコマンドを送信", function(){
+          describe("interrupt0をCHANGEで有効", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/0?type=CHANGE", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが0", function(){
+              result.num.should.equal(0);
+            });
+            it("modeがCHANGE", function(){
+              result.mode.should.equal("CHANGE");
+            });
+          });
+
+          describe("interrupt1をRISINGで有効", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/1?type=RISING", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが1", function(){
+              result.num.should.equal(1);
+            });
+            it("modeがRISING", function(){
+              result.mode.should.equal("RISING");
+            });
+          });
+
+          describe("interrupt1をFALLINGで有効", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/1?type=FALLING", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが1", function(){
+              result.num.should.equal(1);
+            });
+            it("modeがFALLING", function(){
+              result.mode.should.equal("FALLING");
+            });
+          });
+        });
+
+        describe("不正なコマンドを送信", function(){
+          describe("不正な割込番号を指定", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/10?type=CANGE", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnullじゃない", function(){
+              should.exists(err);
+            });
+            it("errのnameがCommand error.", function(){
+              err.name.should.equal("Command error.");
+            });
+
+            it("errのmessageがIllegal interrupt number.", function(){
+              err.message.should.equal("Illegal interrupt number.");
+            });
+          });
+
+          describe("不正な割込mode", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/on/0?type=AAAA", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnullじゃない", function(){
+              should.exists(err);
+            });
+            it("errのnameがCommand error.", function(){
+              err.name.should.equal("Command error.");
+            });
+
+            it("errのmessageがIllegal type.", function(){
+              err.message.should.equal("Illegal type.");
+            });
+          });
+
+        });
+      });
+
+      describe("Detach", function(){
+
+        describe("正常なコマンドを送信", function(){
+          describe("interrupt0を無効化", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/off/0", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが0", function(){
+              result.num.should.equal(0);
+            });
+          });
+
+          describe("interrupt1を無効化", function(e, r){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/off/1", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnull", function(){
+              should.not.exists(err);
+            });
+            it("msgがOK", function(){
+              result.msg.should.equal("OK");
+            });
+            it("numが1", function(){
+              result.num.should.equal(1);
+            });
+          });
+        });
+
+        describe("不正なコマンドを送信", function(){
+          describe("不正な割込番号を指定", function(){
+            var err;
+            var result;
+            before(function(done){
+              arduinode.send("d/int/off/10", function(e, r){
+                err = e;
+                result = r;
+                done();
+              });
+            });
+            it("errがnullじゃない", function(){
+              should.exists(err);
+            });
+            it("errのnameがCommand error.", function(){
+              err.name.should.equal("Command error.");
+            });
+
+            it("errのmessageがIllegal interrupt number.", function(){
+              err.message.should.equal("Illegal interrupt number.");
+            });
+
+          });
+        });
       });
 
     });
