@@ -18,12 +18,12 @@ No programming of Arduino. application can make only node.js.
 ### ソースコードの入手.
 
 ```sh
-git clone https://github.com/mironal/Node-Arduino-General-IO.git
+git clone https://github.com/mironal/arduinode.git
 ```
 
 ### コンパイル & 書き込み
 
-"Node-Arduino-General-IO/arduino/GeneralIoSerial"の中にある"GeneralIoSerial.ino"をArduinoの開発環境で開き、Arduinoに書き込む.
+"arduinode/sketch/arduinode"の中にある"arduinode.ino"をArduinoの開発環境で開き、Arduinoに書き込む.
 
 これだけです。
 
