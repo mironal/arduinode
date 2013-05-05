@@ -343,7 +343,7 @@ analogWrite(port, value);
 
 AD値読み込みに使用される基準電圧源を変更します。
 
-# 関数
+### 関数
 
 ```js
 analogReference(type, callback);
@@ -371,7 +371,7 @@ arduinode.analogReference(type, function(err, result){
 ### 対応するArduinoの操作
 
 ```c
-analogReference([type]);
+analogReference(type);
 ```
 
 ### 安定度
@@ -412,7 +412,7 @@ arduinode.digitalRead(port, function(err, result){
 ### 対応するArduinoの操作
 
 ```c
-digitalRead([port]);
+digitalRead(port);
 ```
 
 ### 安定度
@@ -454,7 +454,7 @@ arduinode.digitalWrite(port, value,function(err, result){
 ### 対応するArduinoの操作
 
 ```c
-digitalWrite([port], [val]);
+digitalWrite(port, value);
 ```
 
 ### 安定度
@@ -497,7 +497,7 @@ arduinode.pinMode(port, mode, function(err, result){
 ### 対応するArduinoの操作
 
 ```c
-pinMode([port], [mode]);
+pinMode(port, mode);
 ```
 
 ### 安定度
@@ -773,6 +773,10 @@ arduinode.on("event", function(data){
 attachInterrupt(port, function, mode);
 ```
 
+### 安定度
+
+実験的
+
 
 ## 外部割込み無効 <a name="detachInterrupt">
 
@@ -801,6 +805,10 @@ arduinode.detachInterrupt(0, function(err, result){
   // { msg: 'OK', num: 0 }
 });
 ```
+
+### 安定度
+
+実験的
 
 
 # Arduinoそのものに関する操作 <a name="system">
