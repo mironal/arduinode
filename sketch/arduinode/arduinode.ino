@@ -57,6 +57,36 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
   {"EXTERNAL", EXTERNAL}
 };
 
+volatile uint32_t interrupt_counter[6] = {0};
+
+void interrupt0(void){
+  ++interrupt_counter[0];
+}
+void interrupt1(void){
+  ++interrupt_counter[1];
+}
+void interrupt2(void){
+  ++interrupt_counter[2];
+}
+void interrupt3(void){
+  ++interrupt_counter[3];
+}
+void interrupt4(void){
+  ++interrupt_counter[4];
+}
+void interrupt5(void){
+  ++interrupt_counter[5];
+}
+
+const VOID_FUNC_PTR INTERRUPT_FUNC_TBL[] = {
+  interrupt0,
+  interrupt1,
+  interrupt2,
+  interrupt3,
+  interrupt4,
+  interrupt5,
+};
+
 #else
 /*******************
   Arduino Unoとか
@@ -76,13 +106,6 @@ const struct STR_UINT8_PEAR AI_REF_TBL[] = {
   {"EXTERNAL", EXTERNAL}
 };
 
-const struct STR_UINT8_PEAR INTERRUPT_MODE_TBL[] = {
-  {"LOW", LOW},
-  {"CHANGE", CHANGE},
-  {"RISING", RISING},
-  {"FALLING", FALLING}
-};
-
 volatile uint32_t interrupt_counter[2] = {0};
 void interrupt0(void){
   ++interrupt_counter[0];
@@ -98,6 +121,13 @@ const VOID_FUNC_PTR INTERRUPT_FUNC_TBL[] = {
 };
 
 #endif
+
+const struct STR_UINT8_PEAR INTERRUPT_MODE_TBL[] = {
+  {"LOW", LOW},
+  {"CHANGE", CHANGE},
+  {"RISING", RISING},
+  {"FALLING", FALLING}
+};
 
 const prog_char ILLEGAL_COMMAND[] PROGMEM       = "Illegal command.";
 const prog_char ILLEGAL_TYPE[] PROGMEM          = "Illegal type.";

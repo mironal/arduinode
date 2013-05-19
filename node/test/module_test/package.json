@@ -1,7 +1,0 @@
-{
-  "name": "module_test" ,
-  "private": true ,
-  "dependencies": {
-    "should" : "*"
-  }
-}

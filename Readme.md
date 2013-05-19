@@ -11,19 +11,19 @@ No programming of Arduino. application can make only node.js.
 
 # 使い方
 
-## GeneralIoSerial.ino
+## arduinode.ino
 
 ソースコードを入手し、お手持ちのarduinoに書き込むだけで準備完了です。
 
 ### ソースコードの入手.
 
 ```sh
-git clone https://github.com/mironal/Node-Arduino-General-IO.git
+git clone https://github.com/mironal/arduinode.git
 ```
 
 ### コンパイル & 書き込み
 
-"Node-Arduino-General-IO/arduino/GeneralIoSerial"の中にある"GeneralIoSerial.ino"をArduinoの開発環境で開き、Arduinoに書き込む.
+"arduinode/sketch/arduinode"の中にある"arduinode.ino"をArduinoの開発環境で開き、Arduinoに書き込む.
 
 これだけです。
 
@@ -62,7 +62,7 @@ arduinode = new Arduinode(portName, function(){
 
 ### Example application
 
-**[Come here!](node/example/Readme.md)**
+**[Come here!](example/Readme.md)**
 
 
 # どのように操作が出来るのか？
