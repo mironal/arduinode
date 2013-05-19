@@ -21,6 +21,12 @@ No programming of Arduino. application can make only node.js.
 git clone https://github.com/mironal/arduinode.git
 ```
 
+もしくは
+
+```sh
+npm install arduinode
+```
+
 ### コンパイル & 書き込み
 
 "arduinode/sketch/arduinode"の中にある"arduinode.ino"をArduinoの開発環境で開き、Arduinoに書き込む.
@@ -28,7 +34,7 @@ git clone https://github.com/mironal/arduinode.git
 これだけです。
 
 
-## arduinode
+## arduinode.js
 
 npm(node package manager)を使って簡単にインストール出来ます。
 
@@ -39,9 +45,6 @@ Install arduinode module.
 ```sh
 npm install arduinode
 ```
-### ドキュメント
-
-**[API document を見る！](doc/API.md)**
 
 
 ### Example code
@@ -51,18 +54,28 @@ var Arduinode = require("arduinode").Arduinode;
 
 var portName = "/dev/tty.usbmodem1411";
 
-arduinode = new Arduinode(portName, function(){
-    console.log("open");
-    arduinode.analogRead(0, function(err, result){
-      console.log(result);
-    });
-});
+var arduinode = new Arduinode(port, function(err, result){
+  if(err){
+    return console.log(err);
+  }
+  console.log("open");
 
+  // Read analog port value.
+  arduinode.analogRead(0, function(err, result){
+    if(err){
+      return console.log(err);
+    }
+
+    console.log(result);
+    // { msg: "OK", port: 0, val: 401 }
+
+    arduinode.close(function(){
+      console.log("close");
+    });
+  });
+});
 ```
 
-### Example application
-
-**[Come here!](example/Readme.md)**
 
 
 # どのように操作が出来るのか？
@@ -77,8 +90,11 @@ var Arduinode = require("arduinode").Arduinode;
 var portName = "/dev/tty.usbmodem1411";
 
 // Arduinoと接続
-var arduinode = new Arduinode(portName, function(){
-    console.log("ready");
+var arduinode = new Arduinode(port, function(err, result){
+  if(err){
+    return console.log(err);
+  }
+  console.log("open");
 });
 ```
 
@@ -119,7 +135,18 @@ arduinode.digitalRead(2, function(err, result){
 });
 ```
 
-# 哲学、Philosophy
+### Document
+
+**[API document を見る！](doc/API.md)**
+
+### Example application
+
+arduinode.js + WebSocket(socket.io) + express
+
+**[Come here!](example/Readme.md)**
+
+
+# 誕生の理由
 
 
 ## 問題提起、 Problem presentation
