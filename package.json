@@ -14,7 +14,9 @@
     "url": "https://github.com/mironal/Node-Arduino-General-IO"
   },
   "keywords": [
-    "arduino"
+    "arduino",
+    "serialport",
+    "rpc"
     ],
   "author": "mironal",
   "license": "MIT"
