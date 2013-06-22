@@ -1,7 +1,7 @@
 {
   "name": "arduinode",
   "version": "0.0.7",
-  "description": "Node Arduino general io.",
+  "description": "Framework to connect the Arduino and node.js.",
   "main": "arduinode.js",
   "dependencies" : {
     "serialport"   :  "*"
