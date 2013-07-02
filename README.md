@@ -58,6 +58,49 @@ var arduinode = new Arduinode(port, function(err, result){
 });
 ```
 
+# Features
+
+## Analog read, write support
+
+```js
+arduinode.analogRead(port, callback);
+arduinode.analogWrite(port, value, callback);
+```
+
+## Didital read, write support
+
+```js
+arduinode.digitalRead(port, callback);
+arduinode.digitalWrite(port, value, callback);
+```
+
+
+## Port change interrupt support
+
+```js
+// num  : Interrupt number. 0 or 1
+// mode : "CHANGE" or "RISING" or "FALLING" or "LOW"
+arduinode.attachInterrupt(num, mode, callback)
+arduinode.detachInterrupt(num, callback);
+
+// Receive interrupt event.
+arduinode.on("event", function(data){
+  console.log(data);
+});
+```
+
+## Timer overflow Interrupt support
+
+```js
+digitalStreamOn(port, intervalMiliSec, callback);
+digitalStreamOff(port, callback);
+
+// Receive interrupt event.
+arduinode.on("event", function(data){
+  console.log(data);
+});
+```
+
 # Document
 
 **[API document を見る！](doc/API.md)**
