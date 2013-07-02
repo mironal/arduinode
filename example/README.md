@@ -1,10 +1,10 @@
 # How to use
 
-```sh
-npm install
-```
+Connect the Arduino to your computer.
 
 ```sh
+cd arduinode/example
+npm install
 node app.js
 ```
 
