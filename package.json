@@ -1,6 +1,6 @@
 {
   "name": "arduinode",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Framework to connect the Arduino and node.js.",
   "main": "arduinode.js",
   "dependencies" : {
