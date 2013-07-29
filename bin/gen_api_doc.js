@@ -25,7 +25,7 @@ var isDoc = false;
 var level1Header = new RegExp(/^# .*$/);
 var level2Header = new RegExp(/^## .*$/);
 
-console.log("# 目次");
+console.log("# Table of Contents");
 
 var lastPreLine = false;
 for(var i = 0; i < contents.length; i++){
