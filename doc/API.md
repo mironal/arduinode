@@ -1,249 +1,48 @@
-# 目次
-* [はじめに](#intro)
-    * [APIの安定度 : stability](#stability)
-    * [API使用上の注意 : attention](#attention)
-* [コンストラクタ](#Arduinode)
-* [Analogポートに関する操作](#analog)
-    * [AD値読み込み : analogRead](#analogRead)
-    * [アナログ値(PWM)出力 : analogWrite](#analogWrite)
-    * [Analog入力基準電圧変更 : analogReference](#analogReference)
-* [Digitalポートに関する操作](#digital)
-    * [ポート値読み込み : digitalRead](#digitalRead)
-    * [ポート出力 : digitalWrite](#digitalWrite)
-    * [ピンモード変更 : pinMode](#pinMode)
-* [Stream(連続転送) API](#stream)
-    * [DI連続転送ON : digitalStreamOn](#digitalStreamOn)
-    * [DI連続転送OFF : digitalStreamOff](#digitalStreamOff)
-    * [AI連続転送ON : analogStreamOn](#analogStreamOn)
-    * [AI連続転送OFF : analogStreamOff](#analogStreamOff)
-* [Interrupt(外部割込)に関する操作](#interrupt)
-    * [外部割込み有効 : attachInterrupt](#attachInterrupt)
-    * [外部割込み無効 : detachInterrupt](#detachInterrupt)
-* [Arduinoそのものに関する操作](#system)
-    * [シリアル切断 : close](#close)
+# Table of Contents
+* [API Stability](#stability)
+* [Constructor](#Constructor)
+* [Analog I/O](#analog)
+    * [Analog Read : analogRead](#analogRead)
+    * [Analog Write (PWM) : analogWrite](#analogWrite)
+    * [Analog Reference : analogReference](#analogReference)
+* [Digital I/O](#digital)
+    * [Digital Read : digitalRead](#digitalRead)
+    * [Digital Write : digitalWrite](#digitalWrite)
+    * [Pin mode change  : pinMode](#pinMode)
+* [Streaming (連続転送) API](#stream)
+    * [DI Streaming ON : digitalStreamOn](#digitalStreamOn)
+    * [DI Streaming OFF : digitalStreamOff](#digitalStreamOff)
+    * [AI Streaming ON : analogStreamOn](#analogStreamOn)
+    * [AI Streaming OFF : analogStreamOff](#analogStreamOff)
+* [External Interrupt (外部割込) API](#interrupt)
+    * [External Interrupt ON : attachInterrupt](#attachInterrupt)
+    * [External Interrupt OFF : detachInterrupt](#detachInterrupt)
+* [System API](#system)
+    * [Close Serial : close](#close)
 
-# はじめに <a name="intro">
-
-## APIの安定度 <a name="stability">
+# API Stability <a name="stability"></a>
 
 各APIには以下の3段階の安定度があります。現段階では、この安定度の段階すら変更される可能性があります。
 
-1. 実験的
+1. Experimental
 :実験的なAPIです。将来大きく仕様が変更される可能性があります
 
-2. 安定
+2. Stable
 :まだ十分にテストされていません。しかし、大きな仕様変更はありません。
 
-3. 固定
+3. Locked
 :十分にテストされた安定したAPIです。仕様が変更されることはまずありません。
 
 
-## API使用上の注意 <a name="attention">
-
-APIを連続してコールする場合は、それぞれのAPIの完了を待つ必要があります.
-
-これはArduinoのシリアル受信バッファサイズが小さいため、同時に複数のコマンドを送信すると受信バッファが溢れ、送信したコマンドの文字列が破壊されるためです。
-
-例えば以下の様なコードを実行すると容易にエラーを発生させる事が出来ます.
-
-```js
-arduinode.digitalRead(0, fucntion(err, result){
-  // Maybe don't have error.
-  if(err){
-    return coneosle.log(err);
-  }
-  console.log(result);
-});
-
-arduinode.digitalRead(1, fucntion(err, result){
-  // Error occurs!!!
-  if(err){
-    return coneosle.log(err);
-  }
-  console.log(result);
-});
-```
-
-この問題を回避するために、以下の例のようにコールバック関数内で次のコマンドをArduinoに送信して下さい。
-
-```js
-arduinode.digitalRead(0, function(err, result){
-  if(err){
-    return coneosle.log(err);
-  }
-  console.log(result);
-  arduinode.digitalRead(1, function(err, result){
-    if(err){
-      return coneosle.log(err);
-    }
-    console.log(result);
-  });
-});
-```
-
-但しこのように記述するとネストが深くなり大変です.
-
-そこでasyncモジュールを使うことで簡単に記述する方法を紹介します。
-
-```sh
-npm install async
-```
-
-してasyncモジュールを取得して下さい。
-
-以下にasyncモジュール使用前と使用後の完全なコード例を記載します.
-
-asyncモジュール使用前
-
-```js
-"use strict";
-var async = require("async");
-var Arduinode = require("arduinode").Arduinode;
-
-// Your serial port name.
-var portname = "/dev/tty.usbmodem1411";
-
-var arduinode = new Arduinode(portname, function(err, result){ if(err){
-    return console.log(err);
-  }
-  arduinode.digitalRead(0, function(err, result){
-    if(err){
-      return console.log(err);
-    }
-    console.log(result);
-
-    arduinode.digitalRead(1, function(err, result){
-      if(err){
-        return console.log(err);
-      }
-      console.log(result);
-
-      arduinode.digitalRead(2, function(err, result){
-        if(err){
-          return console.log(err);
-        }
-        console.log(result);
-
-        arduinode.digitalRead(3, function(err, result){
-          if(err){
-            return console.log(err);
-          }
-          console.log(result);
-
-          arduinode.digitalRead(4, function(err, result){
-            if(err){
-              return console.log(err);
-            }
-            console.log(result);
-
-            arduinode.digitalRead(5, function(err, result){
-              if(err){
-                return console.log(err);
-              }
-              console.log(result);
-              arduinode.digitalRead(6, function(err, result){
-                if(err){
-                  return console.log(err);
-                }
-                console.log(result);
-
-                arduinode.close(function(){
-                  console.log("exit");
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  });
-});
-```
-
-asyncモジュール使用後
-
-```js
-"use strict";
-var async = require("async");
-var Arduinode = require("arduinode").Arduinode;
-
-// Your serial port name.
-var portname = "/dev/tty.usbmodem1411";
-
-var arduinode = new Arduinode(portname, function(err, result){
-  if(err){
-    return console.log(err);
-  }
-
-  // クロージャーでport番号をキャプチャする.
-  function makeTask(port){
-    return function(cb){
-      arduinode.digitalRead(port, cb);
-    };
-  }
-  var tasks = [];
-  for(var i = 0; i < 7; i++){
-    tasks.push(makeTask(i));
-  }
-
-  tasks.push(function(cb){
-    arduinode.close(cb);
-  });
-
-  // asyncモジュールを使用してArduinoを操作.
-  async.series(tasks, function(err, results){
-    if(err){
-      return console.log(err);
-    }
-    // 各コマンドの結果が配列として入ってくる.
-    console.log(results);
-  });
-});
-
-```
-
-
-また、各結果に名前を付けて以下のように書くことも出来ます。
-
-```js
-var arduinode = new Arduinode(portname, function(err, result){
-  var tasks = {
-    di0: function(callback){
-      arduinode.digitalRead(0, callback);
-    },
-    di1: function(callback){
-      arduinode.digitalRead(1, callback);
-    },
-    di2: function(callback){
-      arduinode.digitalRead(2, callback);
-    }
-  };
-
-  async.series(tasks, function(err, results){
-    if(err){
-      console.log(err);
-    }
-    console.log(results.di0);
-    console.log(results.di1);
-    console.log(results.di2);
-
-    arduinode.close(function(){
-      console.log("exit");
-    });
-
-  });
-});
-```
-
-
-# コンストラクタ <a name="Arduinode">
+# Constructor <a name="Constructor"></a>
 
 ### Sample code
 
 ```js
-// npm install arduinode
 var Arduinode = require("arduinode").Arduinode;
 
+// How to find the serial port?
+// ls /dev | grep usb
 var portname = "Your serial port name";
 
 var arduinode = new Arduinode(portname, function(err, result){
@@ -253,23 +52,23 @@ var arduinode = new Arduinode(portname, function(err, result){
 ```
 
 
-# Analogポートに関する操作 <a name="analog">
+# Analog I/O <a name="analog"></a>
 
 
-## AD値読み込み <a name="analogRead">
+## Analog Read <a name="analogRead"></a>
 
-指定したポートのAD値を読み込む。
+Read the AD value of the specified port.
 
-### 関数
+### Function
 
 ```js
 analogRead(port, callback);
 ```
 
-### 引数
+### Argument(s)
 
 [port]
-:ポート番号
+:Port number
 
 ### Sample code
 
@@ -284,34 +83,34 @@ arduinode.analogRead(port, function(err, reuslt){
 });
 ```
 
-### 対応するArduinoの操作
+### Arduino function of the corresponding
 
 ```c
 analogRead(port);
 ```
 
-### 安定度
+### Stability
 
-安定
+Stable
 
 
-## アナログ値(PWM)出力 <a name="analogWrite">
+## Analog Write (PWM) <a name="analogWrite"></a>
 
-指定したポートからアナログ値を出力します。
+Output the analog value from the specified port.
 
-### 関数
+### Function
 
 ```js
 analogWrite(port, value, callback);
 ```
 
-### 引数
+### Argument(s)
 
 [port]
-:ポート番号
+:Port number
 
 [value]
-:出力値
+:Output Value
 
 
 ### Sample code
@@ -328,35 +127,39 @@ arduinode.analogWrite(port, value, function(err, result){
 });
 ```
 
-### 対応するArduinoの操作
+### Arduino function of the corresponding
 
 ```c
 analogWrite(port, value);
 ```
 
-### 安定度
+### Stability
 
-安定
+Stable
 
 
-## Analog入力基準電圧変更 <a name="analogReference">
+## Analog Reference <a name="analogReference"></a>
 
-AD値読み込みに使用される基準電圧源を変更します。
+Change the Analog reference voltage.
 
-### 関数
+### Function
 
 ```js
 analogReference(type, callback);
 ```
 
-### 引数
+### argument(s)
 
 [type]
-:基準電圧
+:Reference voltage type.
 
 * DEFAULT: 電源電圧(5V)が基準電圧となります。これがデフォルトです
 * INTERNAL: 内蔵基準電圧を用います。ATmega168と328Pでは1.1Vです
 * EXTERNAL: AREFピンに供給される電圧(0V～5V)を基準電圧とします
+
+[http://arduino.cc/en/Reference/AnalogReference](http://arduino.cc/en/Reference/AnalogReference)
+
+
 
 ### Sample code
 
@@ -368,33 +171,34 @@ arduinode.analogReference(type, function(err, result){
 });
 ```
 
-### 対応するArduinoの操作
+### Arduino function of the corresponding
 
 ```c
 analogReference(type);
 ```
 
-### 安定度
+### Stability
 
-安定
-
-
-# Digitalポートに関する操作 <a name="digital">
+Stable
 
 
-## ポート値読み込み <a name="digitalRead">
+# Digital I/O <a name="digital"></a>
 
-指定したポートの値(0 or 1)を読み込みます。
 
-### 関数
+## Digital Read <a name="digitalRead"></a>
+
+Read the digital value of the specified port.
+
+### Function
 
 ```js
 digitalRead(port, callback);
 ```
 
-### 引数
+### argument(s)
+
 [port]
-:ポート番号
+:Port number
 
 ### Sample code
 
@@ -409,22 +213,22 @@ arduinode.digitalRead(port, function(err, result){
 });
 ```
 
-### 対応するArduinoの操作
+### Arduino function of the corresponding
 
 ```c
 digitalRead(port);
 ```
 
-### 安定度
+### Stability
 
-安定
+Stable
 
 
-## ポート出力 <a name="digitalWrite">
+## Digital Write <a name="digitalWrite"></a>
 
-指定したポートに値を書き込みます。
+Output the digital value from the specified port.
 
-### 関数
+### Function
 
 ```js
 digitalWrite(port, value, callback);
@@ -444,40 +248,44 @@ arduinode.digitalWrite(port, value,function(err, result){
 });
 ```
 
-### 引数
+### argument(s)
+
 [port]
-:ポート番号
+:Port number
 
 [value]
-:出力値. (0 , 1 or "HIGH", "LOW")
+:Output Value(0 , 1 or "HIGH", "LOW").
 
-### 対応するArduinoの操作
+
+### Arduino function of the corresponding
 
 ```c
 digitalWrite(port, value);
 ```
 
-### 安定度
+### Stability
 
-安定
+Stable
 
 
-## ピンモード変更 <a name="pinMode">
+## Pin mode change  <a name="pinMode"></a>
 
-指定したポートのピンモードを変更します。
+Change pin mode for the specified port.
 
-### 関数
+
+### Function
 
 ```js
 pinMode(port, mode, callback);
 ```
 
-### 引数
+### argument(s)
+
 [port]
-:ポート番号
+:Port number
 
 [mode]
-:設定するモード "INPUT", "INPUT_PULLUP" or "OUTPUT"
+:Pin mode. "INPUT", "INPUT_PULLUP" or "OUTPUT"
 
 
 ### Sample code
@@ -494,18 +302,20 @@ arduinode.pinMode(port, mode, function(err, result){
 });
 ```
 
-### 対応するArduinoの操作
+### Arduino function of the corresponding
 
 ```c
 pinMode(port, mode);
 ```
 
-### 安定度
+### Stability
 
-安定
+Stable
 
 
-# Stream(連続転送) API <a name="stream">
+# Streaming (連続転送) API <a name="stream"></a>
+
+You can get the value of DI, AI without request.
 
 リクエストを送らずにDIやAIの指定したポートの値を指定した間隔(msec)で取得することが出来ます。
 
@@ -527,7 +337,12 @@ arduinode.on("event", function(data){
 
 AI読み取りなら"ai"が、DI読み取りなら"di"が格納されています。
 
+[type] is type of event. "ai" or "di".
+
+
 [dataJson]はそのイベントで読み取られた情報が格納されています。
+
+[dataJson] is the value of the event.
 
 AIならanalogRead()を実行した時のレスポンスと同じ内容が、DIならdigitalRead()を実行した時のレスポンスと同じ内容のJSONが格納されています。
 
@@ -562,23 +377,27 @@ arduinode.on("event", function(data){
 
 ※ Stream APIの仕様は将来変更される可能性があります。
 
-## DI連続転送ON <a name="digitalStreamOn">
+※ There is likely to change in the future specification of Stream API.
+
+## DI Streaming ON <a name="digitalStreamOn"></a>
 
 指定したポートの連続転送を有効にします.
 
-### 関数
+Enable Streaming transfer for the specified port.
+
+### Function
 
 ```js
 digitalStreamOn(port, interval, callback);
 ```
 
-### 引数
+### Argument(s)
 
 [port]
-:ポート番号
+:ポート番号 (port number)
 
 [interval]
-:転送間隔[msec]
+:転送間隔 (Transfer interval) [msec]
 
 ### Sample code
 
@@ -599,25 +418,27 @@ arduinode.on("event", function(data){
 });
 ```
 
-### 安定度
+### Stability
 
-実験的
+Experimental
 
 
-## DI連続転送OFF <a name="digitalStreamOff">
+## DI Streaming OFF <a name="digitalStreamOff"></a>
 
 指定したポートの連続転送を無効にします.
 
-### 関数
+Disable Streaming transfer for the specified port.
+
+### Function
 
 ```js
 digitalStreamOff(port, callback);
 ```
 
-### 引数
+### Argument(s)
 
 [port]
-:ポート番号
+:ポート番号 (port number)
 
 ### Sample code
 
@@ -637,27 +458,29 @@ arduinode.on("event", function(data){
 });
 ```
 
-### 安定度
+### Stability
 
-実験的
+Experimental
 
-## AI連続転送ON <a name="analogStreamOn">
+## AI Streaming ON <a name="analogStreamOn"></a>
 
 指定したポートの連続転送を有効にします.
 
-### 関数
+Enable Streaming transfer for the specified port.
+
+### Function
 
 ```js
 analogStreamOn(port, interval, callback);
 ```
 
-### 引数
+### Argument(s)
 
 [port]
-:ポート番号
+:ポート番号 (port number)
 
 [interval]
-:転送間隔[msec]
+:転送間隔 (Transfer interval) [msec]
 
 
 ### Sample code
@@ -679,24 +502,27 @@ arduinode.on("event", function(data){
 });
 ```
 
-### 安定度
+### Stability
 
-実験的
+Experimental
 
-## AI連続転送OFF <a name="analogStreamOff">
+
+## AI Streaming OFF <a name="analogStreamOff"></a>
 
 指定したポートの連続転送を無効にします.
 
-### 関数
+Disable Streaming transfer for the specified port.
+
+### Function
 
 ```js
 analogStreamOff(port, callback);
 ```
 
-### 引数
+### Argument(s)
 
 [port]
-:ポート番号
+:ポート番号 (port number)
 
 ### Sample code
 
@@ -714,40 +540,50 @@ arduinode.on("event", function(data){
 });
 ```
 
-### 安定度
+### Stability
 
-実験的
+Experimental
 
 
-# Interrupt(外部割込)に関する操作 <a name="interrupt">
+# External Interrupt (外部割込) API <a name="interrupt"></a>
 
-特定のポートの状態が変化したことをイベントとして通知することが出来ます。
+特定のポートの状態が変化したことをイベントとして取得することが出来ます。
 
 スイッチの状態変化やパルスを取得するのにポーリングを行うのは効率的ではありません。
 
 外部割込みを使用することにより、効率的に状態の変化を取得出来ます。
 
-外部割込みには以下の2つの割込が使用可能です。
+外部割込みには以下の2つの割込みが使用可能です。
 
-割込番号 | Digitalポート
----------|-------------
-0        | 2
-1        | 3
+
+You can get as an event that the state of the specific port has changed.
+
+The polling to get a pulse or change in state of the switch is not as efficient.
+
+By using the external interrupt,  you can get a change of state in an efficient manner.
+
+Interruption of the following two are available in the external interrupt.
+
+
+Interrupt number | Digital port number
+-----------------|-------------
+0                | 2
+1                | 3
 
 
 Arduino Megaの場合は以下の6つの割込が使用可能です。
 
-割込番号 | Digitalポート
----------|-------------
-0        | 2
-1        | 3
-2        | 21
-3        | 20
-4        | 19
-5        | 18
+Interrupt number | Digital port number
+-----------------|-------------
+0                | 2
+1                | 3
+2                | 21
+3                | 20
+4                | 19
+5                | 18
 
 
-※Arduinoのリファレンスも参考にして下さい.
+※ Arduinoのリファレンスも参考にして下さい.
 
 割込のイベントは"event"というイベントに通知され以下のコードで取得することが可能です.
 
@@ -758,7 +594,7 @@ arduinode.on("event" function(data){
 });
 ```
 
-numは割込番号、countは割込発生回数です。
+num は割込番号、count は割込発生回数です。
 割込発生回数はイベントが通知されるごとにリセット(0に戻る)されます。
 
 また、Streamイベントも同様のイベントに通知されるので、Streamイベントと併用する場合は以下のように条件分岐する必要があります.
@@ -782,31 +618,35 @@ arduinode.on("event", function(data){
 
 このイベントの仕様は実験的であり、今後変更される場合があります。
 
+※ There is likely to change in the future specificatio of Interrupt API.
 
-## 外部割込み有効 <a name="attachInterrupt">
+
+## External Interrupt ON <a name="attachInterrupt"></a>
 
 指定した番号の外部割込みを有効にする.
 
-### 関数
+Enable External Interrupt for the specified interrupt number.
+
+### Function
 
 ```js
 attachInterrupt(num, mode, callback);
 ```
 
-### 引数
+### Argument(s)
 
 [num]
-:割込番号(0 or 1).
+:割込番号 (Interrupt number, 0 or 1).
 Arduino Megaの場合は0, 1, 2, 3, 4 or 5
 
 
 [mode]
-:割込を発生させるトリガ文字列
+:割込を発生させるトリガの種類 (The kind of interrupt trigger.)
 
 * "LOW" ピンがLOWのとき発生
 * "CHANGE" ピンの状態が変化したときに発生
-* "RISING" ピンの状態がLOWからHIGHに変わったときに発生
-* "FALLING" ピンの状態がHIGHからLOWに変わったときに発生
+* "RISING" ピンの状態がLOWからHIGHに変わったときに発生. LOW -> HIGH
+* "FALLING" ピンの状態がHIGHからLOWに変わったときに発生. HIGH -> LOW
 
 
 ### Sample code
@@ -828,31 +668,33 @@ arduinode.on("event", function(data){
 });
 ```
 
-### 対応するArduinoの操作
+### Arduino function of the corresponding
 
 ```c
 attachInterrupt(port, function, mode);
 ```
 
-### 安定度
+### Stability
 
-実験的
+Experimental
 
 
-## 外部割込み無効 <a name="detachInterrupt">
+## External Interrupt OFF <a name="detachInterrupt"></a>
 
 指定した番号の外部割込みを無効にする.
 
-### 関数
+Disable External Interrupt for the specified interrupt number.
+
+### Function
 
 ```js
 detachInterrupt(num, callback);
 ```
 
-### 引数
+### Argument(s)
 
 [num]
-:割込番号(0 or 1).
+:割込番号 (Interrupt number, 0 or 1).
 Arduino Megaの場合は0, 1, 2, 3, 4 or 5
 
 ### Sample code
@@ -867,29 +709,39 @@ arduinode.detachInterrupt(0, function(err, result){
 });
 ```
 
-### 安定度
+### Arduino function of the corresponding
 
-実験的
+```c
+detachInterrupt(interrupt);
+```
+
+### Stability
+
+Experimental
 
 
-# Arduinoそのものに関する操作 <a name="system">
+# System API <a name="system"></a>
 
 
-## シリアル切断 <a name="close">
+## Close Serial <a name="close"></a>
 
 Arduinoを強制的にリセットすることでシリアルポート接続を切断する。
 
-このAPIを使って切断してから出ないとnode.jsを終了できない。
+Disconnects the serial port connection by resetting to force the Arduino.
 
-### リクエスト(node.js -> Arduino)
+このAPIを使って切断してからじゃないと node.js を終了できない。
 
-```txt
-system/reset
+Can not terminate the node.js If you do not're after disconnect by using this API.
+
+### Function
+
+```js
+close(callback);
 ```
 
-### レスポンス(node.js <- Arduino)
+### Argument(s)
 
-無し
+-
 
 ### Sample code
 
@@ -899,11 +751,13 @@ arduinode.close(function(){
 });
 ```
 
-### 対応するArduinoの操作
-
-無し.
+### Note
 
 Arduino内でスタックオーバーフローを発生させることで強制的にリセットを行なっている。
 
 ArduinoはDTR信号を制御することでリセット可能だが、node-serialportでDTR信号を制御する方法が不明なので、現段階ではこの方法を取る。
+
+It is a force reset by generating a stack overflow.
+
+Arduino's reset possible by controlling the DTR signal, but how to control the DTR signal in the node-serialport unknown therefore,  take this way at this stage.
 

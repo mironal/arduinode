@@ -23,7 +23,7 @@ npm install arduinode
 
 Open the Sketch(sketch/arduinode/arduinode.ino) in Arduino IDE, write to the Arduino.
 
-<img src="doc/img/write-to-arduino.png">
+<img src="https://github.com/mironal/arduinode/raw/master/doc/img/write-to-arduino.png">
 
 ## 3. Write the node.js code! : プログラミングじゃぁ！
 
